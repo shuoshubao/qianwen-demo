@@ -9,18 +9,21 @@ import { useRunner } from '../runnerContext';
 // 支持「运行」的语言，与 CodeRunner 的 LANG_MAP 对应
 const RUNNABLE_LANGS = ['html', 'xml', 'svg', 'css', 'js', 'javascript', 'ts', 'typescript'];
 
-function CodeBlock({ inline, className, children, ...props }) {
+function CodeBlock({ className, children, node, ...rest }) {
     const [copied, setCopied] = useState(false);
     const preRef = useRef(null);
     const { openRunner } = useRunner();
-    if (inline) {
+    const lang = /language-(\w+)/.exec(className || '')?.[1] || '';
+
+    // react-markdown v9 不再传 inline prop，带 language-* 类名的是块级代码，
+    // 否则（如段落内的 `code`）按行内渲染，避免 div/pre 嵌套进 <p>
+    if (!lang) {
         return (
-            <code className="rounded bg-[rgba(15,20,30,0.06)] px-1.5 py-0.5 font-mono text-[13px] text-[#d63384]" {...props}>
+            <code className="rounded bg-[rgba(15,20,30,0.06)] px-1.5 py-0.5 font-mono text-[13px] text-[#d63384]" {...rest}>
                 {children}
             </code>
         );
     }
-    const lang = /language-(\w+)/.exec(className || '')?.[1] || '';
     const runnable = RUNNABLE_LANGS.includes(lang);
 
     const codeText = () => preRef.current?.innerText ?? '';
@@ -61,7 +64,7 @@ function CodeBlock({ inline, className, children, ...props }) {
                 </div>
             </div>
             <pre ref={preRef} className={className}>
-                <code className={className} {...props}>
+                <code className={className} {...rest}>
                     {children}
                 </code>
             </pre>
@@ -72,7 +75,16 @@ function CodeBlock({ inline, className, children, ...props }) {
 export default function Markdown({ children }) {
     return (
         <div className="markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={{ code: CodeBlock }}>
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+                components={{
+                    // react-markdown 默认渲染 <pre><code>，而 CodeBlock 非行内分支自带 pre，
+                    // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套（双 pre 样式叠加）
+                    pre: ({ children }) => <>{children}</>,
+                    code: CodeBlock
+                }}
+            >
                 {children}
             </ReactMarkdown>
         </div>

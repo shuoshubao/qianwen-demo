@@ -1,5 +1,6 @@
 .DS_Store
 *.local
+log.txt
 
 package-lock.json
 

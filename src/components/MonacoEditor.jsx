@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 // @monaco-editor/loader 与 monaco-editor 本体都不走 npm 打包，
 // 首次打开编辑器时从 CDN 按需加载（esm.sh 转译 CJS 为 ESM）
@@ -18,10 +18,15 @@ function getLoader() {
     return loaderPromise;
 }
 
-export default function MonacoEditor({ value, language, onChange }) {
+const MonacoEditor = forwardRef(function MonacoEditor({ value, language, onChange }, ref) {
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
+
+    // 供父组件在切换 tab 时直接读取编辑器当前内容
+    useImperativeHandle(ref, () => ({
+        getValue: () => editorRef.current?.getValue() ?? ''
+    }));
 
     useEffect(() => {
         let disposed = false;
@@ -66,4 +71,6 @@ export default function MonacoEditor({ value, language, onChange }) {
     }, [value, language]);
 
     return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
-}
+});
+
+export default MonacoEditor;
