@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import './App.scss';
 import ChatInput from './components/ChatInput';
+import CodeRunner from './components/CodeRunner';
 import MessageItem from './components/MessageItem';
+import { RunnerContext } from './runnerContext';
 
 let idSeq = 0;
 const nextId = () => `m_${Date.now()}_${idSeq++}`;
@@ -13,6 +15,7 @@ export default function App() {
     const [model, setModel] = useState(MODELS[0].id);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [runner, setRunner] = useState(null); // { code, lang } | null
     const abortRef = useRef(null);
     const scrollRef = useRef(null);
 
@@ -92,46 +95,49 @@ export default function App() {
     const empty = messages.length === 0;
 
     return (
-        <div className="app">
-            <header className="topbar">
-                <div className="topbar-left">
-                    <span className="logo">豆包 · 本地对话</span>
-                    <Select
-                        value={model}
-                        onChange={setModel}
-                        variant="filled"
-                        style={{ minWidth: 170 }}
-                        disabled={loading}
-                        options={MODELS.map(m => ({ value: m.id, label: m.name }))}
-                    />
-                </div>
-                <button className="new-chat" onClick={newChat} disabled={loading}>
-                    <EditOutlined /> 新对话
-                </button>
-            </header>
+        <RunnerContext.Provider value={{ openRunner: (code, lang) => setRunner({ code, lang }) }}>
+            <div className="app">
+                <header className="topbar">
+                    <div className="topbar-left">
+                        <span className="logo">豆包 · 本地对话</span>
+                        <Select
+                            value={model}
+                            onChange={setModel}
+                            variant="filled"
+                            style={{ minWidth: 170 }}
+                            disabled={loading}
+                            options={MODELS.map(m => ({ value: m.id, label: m.name }))}
+                        />
+                    </div>
+                    <button className="new-chat" onClick={newChat} disabled={loading}>
+                        <EditOutlined /> 新对话
+                    </button>
+                </header>
 
-            <main className="chat-scroll" ref={scrollRef}>
-                <div className="chat-inner">
-                    {empty ? (
-                        <div className="welcome">
-                            <div className="welcome-emoji">👋</div>
-                            <h1>你好，我是本地大模型助手</h1>
-                            <p>
-                                当前模型：{currentModel.name}
-                                {currentModel.vision ? '（支持图片理解）' : '（支持深度思考）'}
-                            </p>
-                        </div>
-                    ) : (
-                        messages.map((m, i) => <MessageItem key={m.id} message={m} streaming={loading && i === messages.length - 1} />)
-                    )}
-                </div>
-            </main>
+                <main className="chat-scroll" ref={scrollRef}>
+                    <div className="chat-inner">
+                        {empty ? (
+                            <div className="welcome">
+                                <div className="welcome-emoji">👋</div>
+                                <h1>你好，我是本地大模型助手</h1>
+                                <p>
+                                    当前模型：{currentModel.name}
+                                    {currentModel.vision ? '（支持图片理解）' : '（支持深度思考）'}
+                                </p>
+                            </div>
+                        ) : (
+                            messages.map((m, i) => <MessageItem key={m.id} message={m} streaming={loading && i === messages.length - 1} />)
+                        )}
+                    </div>
+                </main>
 
-            <footer className="composer-bar">
-                <div className="chat-inner">
-                    <ChatInput onSend={handleSend} onStop={handleStop} loading={loading} allowImage={currentModel.vision} />
-                </div>
-            </footer>
-        </div>
+                <footer className="composer-bar">
+                    <div className="chat-inner">
+                        <ChatInput onSend={handleSend} onStop={handleStop} loading={loading} allowImage={currentModel.vision} />
+                    </div>
+                </footer>
+                <CodeRunner runner={runner} onClose={() => setRunner(null)} />
+            </div>
+        </RunnerContext.Provider>
     );
 }

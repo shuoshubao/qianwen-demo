@@ -109,6 +109,29 @@
             letter-spacing: 0.5px;
         }
 
+        .md-code-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .md-code-run {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: none;
+            background: transparent;
+            color: #722ed1;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+
+            &:hover {
+                background: rgba(114, 46, 209, 0.1);
+            }
+        }
+
         .md-code-copy {
             border: none;
             background: transparent;
