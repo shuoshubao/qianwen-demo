@@ -6,8 +6,9 @@ import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import { useRunner } from '../runnerContext';
 
-// 支持「运行」的语言，与 CodeRunner 的 LANG_MAP 对应
-const RUNNABLE_LANGS = ['html', 'xml', 'svg', 'css', 'js', 'javascript', 'ts', 'typescript'];
+// 支持「运行」的语言：仅限本身可独立渲染成完整页面的文档，
+// css/js 片段拼出预览是空白页，无需运行按钮（见 CodeRunner.buildHtml）
+const RUNNABLE_LANGS = ['html', 'xml', 'svg'];
 
 function CodeBlock({ className, children, node, ...rest }) {
     const [copied, setCopied] = useState(false);
