@@ -1,5 +1,5 @@
+import { ArrowUpOutlined, CloseOutlined, PictureOutlined } from '@ant-design/icons';
 import { useRef, useState } from 'react';
-import { ArrowUpOutlined, PictureOutlined, CloseOutlined } from '@ant-design/icons';
 
 export default function ChatInput({ onSend, onStop, loading, allowImage }) {
     const [text, setText] = useState('');
@@ -52,28 +52,35 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
     const canSend = (text.trim() || images.length > 0) && !loading;
 
     return (
-        <div className="composer">
+        <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#3370ff]">
             {images.length > 0 && (
-                <div className="composer-images">
+                <div className="flex flex-wrap gap-2 px-1.5 pt-1.5 pb-2.5">
                     {images.map((img, i) => (
-                        <div className="composer-image" key={i}>
-                            <img src={img.url} alt="preview" />
-                            <button onClick={() => removeImage(i)}>
+                        <div className="relative" key={i}>
+                            <img src={img.url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
+                            <button
+                                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white"
+                                onClick={() => removeImage(i)}
+                            >
                                 <CloseOutlined />
                             </button>
                         </div>
                     ))}
                 </div>
             )}
-            <div className="composer-row">
+            <div className="flex items-end gap-2">
                 {allowImage && (
-                    <button className="composer-icon" title="上传图片" onClick={() => fileRef.current?.click()}>
+                    <button
+                        className="cursor-pointer rounded-lg p-1.5 text-xl leading-none text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#3370ff]"
+                        title="上传图片"
+                        onClick={() => fileRef.current?.click()}
+                    >
                         <PictureOutlined />
                     </button>
                 )}
                 <textarea
                     ref={taRef}
-                    className="composer-input"
+                    className="max-h-[200px] flex-1 resize-none bg-transparent px-1 py-1.5 text-[15px] leading-[1.6] text-[#1f2329] outline-none"
                     placeholder="给 AI 发送消息，Enter 发送，Shift+Enter 换行"
                     value={text}
                     rows={1}
@@ -84,11 +91,20 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
                     onKeyDown={onKeyDown}
                 />
                 {loading ? (
-                    <button className="composer-send stop" onClick={onStop} title="停止">
-                        <span className="stop-square" />
+                    <button
+                        className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1f2329] text-base text-white"
+                        onClick={onStop}
+                        title="停止"
+                    >
+                        <span className="h-3 w-3 rounded-[3px] bg-white" />
                     </button>
                 ) : (
-                    <button className="composer-send" disabled={!canSend} onClick={submit} title="发送">
+                    <button
+                        className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#3370ff] to-[#5b8cff] text-base text-white transition-opacity disabled:cursor-not-allowed disabled:bg-[#d0d3d9]"
+                        disabled={!canSend}
+                        onClick={submit}
+                        title="发送"
+                    >
                         <ArrowUpOutlined />
                     </button>
                 )}

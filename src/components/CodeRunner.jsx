@@ -1,6 +1,5 @@
 import { CloseOutlined, CodeOutlined, EyeOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import './CodeRunner.scss';
 import MonacoEditor from './MonacoEditor';
 
 // 与 Markdown.jsx 中 RUNNABLE_LANGS 保持一致
@@ -75,42 +74,57 @@ export default function CodeRunner({ runner, onClose }) {
     if (!runner) return null;
 
     return (
-        <div className="runner-mask" onClick={onClose}>
-            <aside className="runner-panel" onClick={e => e.stopPropagation()}>
-                <header className="runner-head">
-                    <div className="runner-title">
-                        <span className="runner-dot" />
+        <div className="fixed inset-0 z-[1000] flex justify-end bg-[rgba(15,20,30,0.25)] [animation:runner-fade_0.2s_ease]" onClick={onClose}>
+            <aside
+                className="flex h-full w-[min(600px,92vw)] flex-col bg-white shadow-[-8px_0_32px_rgba(15,20,30,0.12)] [animation:runner-slide_0.25s_ease]"
+                onClick={e => e.stopPropagation()}
+            >
+                <header className="flex flex-shrink-0 items-center gap-4 border-b border-[#eceef1] px-4 py-3">
+                    <div className="flex items-center gap-2 text-[15px] font-semibold text-[#1f2329]">
+                        <span className="h-2 w-2 rounded-full bg-green-500" />
                         代码运行
-                        <span className="runner-lang">{runner.lang}</span>
+                        <span className="rounded-[10px] bg-[rgba(114,46,209,0.08)] px-2 py-0.5 text-xs font-medium text-[#722ed1] uppercase">
+                            {runner.lang}
+                        </span>
                     </div>
-                    <div className="runner-tabs">
-                        <button className={tab === 'preview' ? 'active' : ''} onClick={() => setTab('preview')}>
+                    <div className="ml-auto flex gap-1 rounded-[10px] bg-[#f2f3f5] p-[3px]">
+                        <button
+                            className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-3.5 py-[5px] text-[13px] text-[#646a73] transition-all ${tab === 'preview' ? 'bg-white font-semibold text-[#722ed1] shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''}`}
+                            onClick={() => setTab('preview')}
+                        >
                             <EyeOutlined /> 预览
                         </button>
-                        <button className={tab === 'source' ? 'active' : ''} onClick={() => setTab('source')}>
+                        <button
+                            className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-3.5 py-[5px] text-[13px] text-[#646a73] transition-all ${tab === 'source' ? 'bg-white font-semibold text-[#722ed1] shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''}`}
+                            onClick={() => setTab('source')}
+                        >
                             <CodeOutlined /> 源码
                         </button>
                     </div>
-                    <button className="runner-close" onClick={onClose} title="关闭">
+                    <button
+                        className="cursor-pointer rounded-lg p-1.5 text-base leading-none text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#1f2329]"
+                        onClick={onClose}
+                        title="关闭"
+                    >
                         <CloseOutlined />
                     </button>
                 </header>
 
-                <div className="runner-content">
+                <div className="min-h-0 flex-1">
                     {tab === 'preview' ? (
-                        <div className="runner-preview">
-                            <iframe key={runId} srcDoc={html} sandbox="allow-scripts" title="代码预览" />
+                        <div className="h-full">
+                            <iframe key={runId} srcDoc={html} sandbox="allow-scripts" title="代码预览" className="h-full w-full border-0 bg-white" />
                         </div>
                     ) : (
-                        <div className="runner-source">
+                        <div className="h-full p-2">
                             <MonacoEditor value={code} language={lastLangRef.current} onChange={setCode} />
                         </div>
                     )}
                 </div>
 
-                <footer className="runner-foot">
+                <footer className="flex flex-shrink-0 justify-end border-t border-[#eceef1] px-4 py-2.5">
                     <button
-                        className="runner-run"
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-[18px] bg-gradient-to-br from-[#722ed1] to-[#9254de] px-5 py-2 text-sm text-white transition-opacity hover:opacity-90"
                         onClick={() => {
                             setTab('preview');
                             setRunId(n => n + 1);

@@ -2,7 +2,6 @@ import { EditOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
-import './App.scss';
 import ChatInput from './components/ChatInput';
 import CodeRunner from './components/CodeRunner';
 import MessageItem from './components/MessageItem';
@@ -96,31 +95,32 @@ export default function App() {
 
     return (
         <RunnerContext.Provider value={{ openRunner: (code, lang) => setRunner({ code, lang }) }}>
-            <div className="app">
-                <header className="topbar">
-                    <div className="topbar-left">
-                        <span className="logo">豆包 · 本地对话</span>
-                        <Select
-                            value={model}
-                            onChange={setModel}
-                            variant="filled"
-                            style={{ minWidth: 170 }}
-                            disabled={loading}
-                            options={MODELS.map(m => ({ value: m.id, label: m.name }))}
-                        />
-                    </div>
-                    <button className="new-chat" onClick={newChat} disabled={loading}>
+            <div className="flex h-screen flex-col bg-[#edf0f5]">
+                <header className="flex items-center justify-between border-b border-black/5 bg-white/80 px-6 py-3 backdrop-blur-md">
+                    <Select
+                        value={model}
+                        onChange={setModel}
+                        variant="filled"
+                        style={{ minWidth: 170 }}
+                        disabled={loading}
+                        options={MODELS.map(m => ({ value: m.id, label: m.name }))}
+                    />
+                    <button
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#e5e6eb] bg-white px-3.5 py-1.5 text-sm text-[#1f2329] transition-colors hover:border-[#3370ff] hover:text-[#3370ff] disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={newChat}
+                        disabled={loading}
+                    >
                         <EditOutlined /> 新对话
                     </button>
                 </header>
 
-                <main className="chat-scroll" ref={scrollRef}>
-                    <div className="chat-inner">
+                <main className="flex-1 overflow-y-auto py-6" ref={scrollRef}>
+                    <div className="mx-auto w-full max-w-[860px] px-5">
                         {empty ? (
-                            <div className="welcome">
-                                <div className="welcome-emoji">👋</div>
-                                <h1>你好，我是本地大模型助手</h1>
-                                <p>
+                            <div className="mt-[12vh] text-center text-[#1f2329]">
+                                <div className="text-5xl">👋</div>
+                                <h1 className="my-4 mb-2 text-[26px] font-bold">你好，我是本地大模型助手</h1>
+                                <p className="text-[15px] text-[#8a9099]">
                                     当前模型：{currentModel.name}
                                     {currentModel.vision ? '（支持图片理解）' : '（支持深度思考）'}
                                 </p>
@@ -131,8 +131,8 @@ export default function App() {
                     </div>
                 </main>
 
-                <footer className="composer-bar">
-                    <div className="chat-inner">
+                <footer className="pt-2 pb-[18px]">
+                    <div className="mx-auto w-full max-w-[860px] px-5">
                         <ChatInput onSend={handleSend} onStop={handleStop} loading={loading} allowImage={currentModel.vision} />
                     </div>
                 </footer>

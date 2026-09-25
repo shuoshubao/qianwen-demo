@@ -5,7 +5,6 @@ import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import { useRunner } from '../runnerContext';
-import './Markdown.scss';
 
 // 支持「运行」的语言，与 CodeRunner 的 LANG_MAP 对应
 const RUNNABLE_LANGS = ['html', 'xml', 'svg', 'css', 'js', 'javascript', 'ts', 'typescript'];
@@ -16,7 +15,7 @@ function CodeBlock({ inline, className, children, ...props }) {
     const { openRunner } = useRunner();
     if (inline) {
         return (
-            <code className="md-inline-code" {...props}>
+            <code className="rounded bg-[rgba(15,20,30,0.06)] px-1.5 py-0.5 font-mono text-[13px] text-[#d63384]" {...props}>
                 {children}
             </code>
         );
@@ -40,16 +39,23 @@ function CodeBlock({ inline, className, children, ...props }) {
     };
 
     return (
-        <div className="md-code-wrap">
-            <div className="md-code-head">
-                <span className="md-code-lang">{lang || 'text'}</span>
-                <div className="md-code-actions">
+        <div className="mb-3 overflow-hidden rounded-[10px] border border-[#e5e6eb] bg-[#fbfbfc]">
+            <div className="flex items-center justify-between bg-[#f2f3f5] px-3 py-1.5 text-xs text-[#646a73]">
+                <span className="uppercase tracking-[0.5px]">{lang || 'text'}</span>
+                <div className="flex items-center gap-1">
                     {runnable && (
-                        <button className="md-code-run" onClick={() => openRunner(codeText(), lang)} title="运行预览">
+                        <button
+                            className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
+                            onClick={() => openRunner(codeText(), lang)}
+                            title="运行预览"
+                        >
                             <PlayCircleOutlined /> 运行
                         </button>
                     )}
-                    <button className="md-code-copy" onClick={copy}>
+                    <button
+                        className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
+                        onClick={copy}
+                    >
                         {copied ? '已复制' : '复制'}
                     </button>
                 </div>
