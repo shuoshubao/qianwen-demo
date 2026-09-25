@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RobotOutlined, UserOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
+import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import Markdown from './Markdown';
 import ReasoningPanel from './ReasoningPanel';
 import { splitThinking } from '../api/ollama';
@@ -52,9 +52,6 @@ export default function MessageItem({ message, streaming }) {
                     <div className="bubble bubble-user">{message.content}</div>
                     <MessageMeta time={message.time} text={message.content} align="right" />
                 </div>
-                <div className="avatar avatar-user">
-                    <UserOutlined />
-                </div>
             </div>
         );
     }
@@ -65,9 +62,6 @@ export default function MessageItem({ message, streaming }) {
 
     return (
         <div className="msg msg-assistant">
-            <div className="avatar avatar-assistant">
-                <RobotOutlined />
-            </div>
             <div className="msg-body">
                 <ReasoningPanel reasoning={reasoning} thinking={thinking} />
                 <div className="bubble bubble-assistant">

@@ -89,16 +89,15 @@
 
 .msg {
     display: flex;
-    gap: 12px;
+    flex-direction: column;
     margin-bottom: 24px;
 
     &-user {
-        flex-direction: row;
-        justify-content: flex-end;
+        align-items: flex-end;
     }
 
     &-assistant {
-        flex-direction: row;
+        align-items: stretch;
     }
 
     &:hover .msg-meta {
@@ -106,33 +105,14 @@
     }
 }
 
-.avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-    color: #fff;
-
-    &-user {
-        background: linear-gradient(135deg, #3370ff, #5b8cff);
-    }
-
-    &-assistant {
-        background: linear-gradient(135deg, #7a5cff, #a97bff);
-    }
-}
-
 .msg-body {
-    max-width: 78%;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-width: 100%;
 
     .msg-user & {
+        max-width: 85%;
         align-items: flex-end;
     }
 }
@@ -152,6 +132,7 @@
     }
 
     &-assistant {
+        width: 100%;
         background: #fff;
         color: #1f2329;
         border-top-left-radius: 4px;
