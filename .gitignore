@@ -1,4 +1,8 @@
-node_modules
-dist
-*.local
 .DS_Store
+*.local
+
+package-lock.json
+
+node_modules
+
+dist
