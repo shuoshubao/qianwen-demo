@@ -13,22 +13,6 @@ const ChatIcon = ({ className }) => (
     </svg>
 );
 
-// 会话时间展示: 今天显示时分, 昨天/今年内/更早依次降级
-const formatTime = ts => {
-    if (!ts) return '';
-    const d = new Date(ts);
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    if (d.getTime() >= startOfToday) {
-        const hh = String(d.getHours()).padStart(2, '0');
-        const mm = String(d.getMinutes()).padStart(2, '0');
-        return `${hh}:${mm}`;
-    }
-    if (d.getTime() >= startOfToday - 86400000) return '昨天';
-    if (d.getFullYear() === now.getFullYear()) return `${d.getMonth() + 1}月${d.getDate()}日`;
-    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-};
-
 const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, onRename }) => {
     const [editingId, setEditingId] = useState(null);
     const [draft, setDraft] = useState('');
@@ -49,7 +33,7 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
     };
 
     return (
-        <aside className="flex w-[250px] flex-shrink-0 flex-col border-r border-black/5 bg-[#f7f8fa]">
+        <aside className="flex h-full w-[250px] flex-shrink-0 flex-col border-r border-black/5 bg-[#f7f8fa]">
             <div className="p-3 pb-2">
                 <button
                     className="flex w-full cursor-pointer items-center gap-2 rounded-[10px] px-3 py-2 text-[13px] text-[#1f2329] transition-colors hover:bg-[#eef0f4] disabled:cursor-not-allowed disabled:opacity-50"
@@ -89,7 +73,6 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                                     {item.title || '新对话'}
                                 </div>
                             )}
-                            {editingId !== item.id && <div className="mt-0.5 text-xs text-[#a8adb5]">{formatTime(item.updatedAt)}</div>}
                         </div>
 
                         {editingId !== item.id && (
