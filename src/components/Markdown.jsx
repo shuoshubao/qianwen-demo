@@ -1,6 +1,8 @@
 import { PlayCircleOutlined } from '@ant-design/icons';
+import 'highlight.js/styles/github.css';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import { useRunner } from '../runnerContext';
 import MonacoEditor from './MonacoEditor';
@@ -43,6 +45,13 @@ const blockHeight = (text, max = 420) => {
     return Math.min(Math.max(lines * 20 + 16, 56), max);
 };
 
+// 从 hast 节点树提取纯文本 (rehype-highlight 后 children 是高亮 span 树, 不能直接 String)
+const nodeText = node => {
+    if (!node) return '';
+    if (node.type === 'text') return node.value;
+    return (node.children || []).map(nodeText).join('');
+};
+
 const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
     const [copied, setCopied] = useState(false);
     const { openRunner } = useRunner();
@@ -50,7 +59,7 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
     const lang = /language-([\w-]+)/.exec(className || '')?.[1] || '';
     // "```语言:文件名" 的文件名标注, 未标注时为 null (回退 DEFAULT_NAMES)
     const fileName = /language-[\w-]+:([^\s`]+)/.exec(className || '')?.[1] || null;
-    const code = String(children ?? '').trimEnd(); // fenced code 尾部的换行会让 Monaco 多渲染一个空行
+    const code = (node ? nodeText(node) : String(children ?? '')).trimEnd(); // fenced code 尾部换行会让 Monaco 多渲染一个空行
     const codeRef = useRef(code);
     codeRef.current = code; // 流式输出时内容持续变化, 供运行按钮读取最新值
 
@@ -127,9 +136,13 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                     </div>
                 )}
             </div>
-            {/* 流式生成中内容逐 token 变化, 用纯文本避免 Monaco 反复销毁重建造成闪烁; 结束后再一次性挂载 */}
+            {/* 流式生成中内容逐 token 变化, 用 rehype-highlight 高亮的 pre 渲染; 结束后再挂载 Monaco */}
             {streaming ? (
-                <pre className="max-h-[420px] overflow-auto p-3 font-mono text-[13px] leading-5 text-[#1f2329]">{code}</pre>
+                <pre className={className}>
+                    <code className={className} {...rest}>
+                        {children}
+                    </code>
+                </pre>
             ) : (
                 <div style={{ height: blockHeight(code) }}>
                     <MonacoEditor value={code} language={MONACO_LANG[lang] || 'plaintext'} readOnly />
@@ -160,6 +173,7 @@ const Markdown = ({ children, streaming }) => {
             <BlocksContext.Provider value={ctx}>
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight]}
                     components={{
                         // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套
                         pre: ({ children }) => <>{children}</>,
