@@ -1,5 +1,5 @@
 import { ArrowUpOutlined, CloseOutlined, PaperClipOutlined } from '@ant-design/icons';
-import { message, Select, Space, Tooltip } from 'antd';
+import { Button, message, Select, Space, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
 import { MODELS } from '../api/ollama';
 import { formatSize, getFileMeta } from '../utils/fileMeta';
@@ -90,13 +90,14 @@ const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }
                             return (
                                 <div className="group relative" key={index}>
                                     <img src={item.url} alt="preview" className="h-[52px] w-[52px] rounded-lg object-cover" />
-                                    <button
-                                        className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                    <Button
+                                        type="text"
+                                        shape="circle"
+                                        icon={<CloseOutlined />}
                                         onClick={() => removeAttachment(index)}
                                         title="移除"
-                                    >
-                                        <CloseOutlined />
-                                    </button>
+                                        className="absolute! -top-1.5! -right-1.5! h-5! w-5! bg-black/60! text-[10px]! text-white! opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/60!"
+                                    />
                                 </div>
                             );
                         }
@@ -114,13 +115,14 @@ const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }
                                         {meta.type} · {formatSize(item.size)}
                                     </span>
                                 </div>
-                                <button
-                                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                <Button
+                                    type="text"
+                                    shape="circle"
+                                    icon={<CloseOutlined />}
                                     onClick={() => removeAttachment(index)}
                                     title="移除"
-                                >
-                                    <CloseOutlined />
-                                </button>
+                                    className="absolute! -top-1.5! -right-1.5! h-5! w-5! bg-black/60! text-[10px]! text-white! opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/60!"
+                                />
                             </div>
                         );
                     })}
@@ -141,40 +143,41 @@ const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }
             <div className="flex items-center justify-between pt-1.5">
                 <Space size={8} align="center">
                     <Tooltip title={allowImage ? '上传文件或图片' : '上传文件'}>
-                        <button
-                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-lg leading-none text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                        <Button
+                            type="text"
+                            icon={<PaperClipOutlined />}
                             onClick={() => fileRef.current?.click()}
-                        >
-                            <PaperClipOutlined />
-                        </button>
+                            className="h-6! w-6! rounded-none! text-base! text-[#646a73]! hover:text-[#722ed1]!"
+                        />
                     </Tooltip>
                     <Select
                         value={model}
                         onChange={onModelChange}
                         variant="filled"
-                        size="small"
                         style={{ width: 150 }}
                         disabled={loading}
                         options={MODELS.map(item => ({ value: item.id, label: item.name }))}
                     />
                 </Space>
                 {loading ? (
-                    <button
-                        className="ml-auto flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1f2329] text-base text-white"
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<span className="block h-3 w-3 rounded-[3px] bg-white" />}
                         onClick={onStop}
                         title="停止"
-                    >
-                        <span className="h-3 w-3 rounded-[3px] bg-white" />
-                    </button>
+                        className="ml-auto! h-9! w-9! flex-shrink-0 bg-[#1f2329]!"
+                    />
                 ) : (
-                    <button
-                        className="ml-auto flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#722ed1] to-[#9254de] text-base text-white transition-opacity disabled:cursor-not-allowed disabled:bg-[#d0d3d9]"
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<ArrowUpOutlined />}
                         disabled={!canSend}
                         onClick={submit}
                         title="发送"
-                    >
-                        <ArrowUpOutlined />
-                    </button>
+                        className="ml-auto! h-9! w-9! flex-shrink-0 bg-gradient-to-br! from-[#722ed1]! to-[#9254de]! disabled:from-[#d0d3d9]! disabled:to-[#d0d3d9]!"
+                    />
                 )}
             </div>
             <input ref={fileRef} type="file" multiple hidden accept={allowImage ? undefined : TEXT_ACCEPT} onChange={pickFiles} />

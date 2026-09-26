@@ -82,7 +82,7 @@ const StorageModal = ({ open, onClose, sessions, onDeleteMany }) => {
                     okButtonProps={{ danger: true }}
                     onConfirm={() => remove([record.id])}
                 >
-                    <Button size="small" danger type="text">
+                    <Button danger type="text">
                         删除
                     </Button>
                 </Popconfirm>
@@ -122,7 +122,6 @@ const StorageModal = ({ open, onClose, sessions, onDeleteMany }) => {
         >
             <Table
                 rowKey="id"
-                size="small"
                 loading={loading}
                 dataSource={rows}
                 columns={columns}

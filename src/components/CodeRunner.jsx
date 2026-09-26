@@ -1,5 +1,5 @@
 import { CloseOutlined, CodeOutlined, DownloadOutlined, EyeOutlined, FileOutlined, FolderOutlined } from '@ant-design/icons';
-import { Space, Tree } from 'antd';
+import { Button, Space, Tree } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MonacoEditor from './MonacoEditor';
 
@@ -252,13 +252,13 @@ const CodeRunner = ({ runner, onClose }) => {
                     代码运行
                     <span className="rounded-[10px] bg-[rgba(114,46,209,0.08)] px-2 py-0.5 text-xs font-medium text-[#722ed1]">{files.length} 个文件</span>
                 </Space>
-                <button
-                    className="ml-auto cursor-pointer rounded-lg p-1.5 text-base leading-none text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#1f2329]"
+                <Button
+                    type="text"
+                    icon={<CloseOutlined />}
                     onClick={onClose}
                     title="关闭"
-                >
-                    <CloseOutlined />
-                </button>
+                    className="ml-auto! h-8! w-8! text-[#8a9099]! hover:text-[#1f2329]!"
+                />
             </header>
 
             <div className="flex min-h-0 flex-1">
@@ -286,30 +286,36 @@ const CodeRunner = ({ runner, onClose }) => {
                 <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex flex-shrink-0 items-center justify-between border-b border-[#eceef1] px-4 py-2">
                         <div className="flex gap-1 rounded-[10px] bg-[#f2f3f5] p-[3px]">
-                            <button
-                                className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-3.5 py-[5px] text-[13px] text-[#646a73] transition-all ${
-                                    tab === 'preview' ? 'bg-white font-semibold text-[#722ed1] shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''
-                                }`}
+                            <Button
+                                type="text"
+                                icon={<EyeOutlined />}
                                 onClick={showPreview}
-                            >
-                                <EyeOutlined /> 预览
-                            </button>
-                            <button
-                                className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-3.5 py-[5px] text-[13px] text-[#646a73] transition-all ${
-                                    tab === 'source' ? 'bg-white font-semibold text-[#722ed1] shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''
+                                className={`h-[28px]! rounded-lg! px-3.5! text-[13px]! text-[#646a73]! ${
+                                    tab === 'preview' ? 'bg-white! font-semibold! text-[#722ed1]! shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''
                                 }`}
-                                onClick={() => setTab('source')}
                             >
-                                <CodeOutlined /> 源码
-                            </button>
+                                预览
+                            </Button>
+                            <Button
+                                type="text"
+                                icon={<CodeOutlined />}
+                                onClick={() => setTab('source')}
+                                className={`h-[28px]! rounded-lg! px-3.5! text-[13px]! text-[#646a73]! ${
+                                    tab === 'source' ? 'bg-white! font-semibold! text-[#722ed1]! shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''
+                                }`}
+                            >
+                                源码
+                            </Button>
                         </div>
-                        <button
-                            className="inline-flex cursor-pointer items-center gap-1 text-[13px] text-[#646a73] transition-colors hover:text-[#722ed1]"
+                        <Button
+                            type="text"
+                            icon={<DownloadOutlined />}
                             onClick={download}
                             title="下载"
+                            className="text-[13px]! text-[#646a73]! hover:bg-transparent! hover:text-[#722ed1]!"
                         >
-                            <DownloadOutlined /> 下载
-                        </button>
+                            下载
+                        </Button>
                     </div>
 
                     <div className="min-h-0 flex-1">

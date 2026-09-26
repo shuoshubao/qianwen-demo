@@ -1,5 +1,5 @@
 import { DatabaseOutlined } from '@ant-design/icons';
-import { Modal, Space, Typography } from 'antd';
+import { Button, Modal, Space, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import ChatInput from './components/ChatInput';
@@ -366,13 +366,13 @@ const App = () => {
                 <div className="flex min-w-0 flex-1 flex-col">
                     <header className="flex items-center justify-between gap-4 border-b border-black/5 bg-white/80 px-6 py-3 backdrop-blur-md">
                         <div className="flex min-w-0 flex-1 items-center gap-3">
-                            <button
-                                className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                            <Button
+                                type="text"
+                                icon={<SidebarIcon className="h-[18px] w-[18px]" />}
                                 onClick={toggleSidebar}
                                 title={sidebarCollapsed ? '展开会话列表' : '收起会话列表'}
-                            >
-                                <SidebarIcon className="h-[18px] w-[18px]" />
-                            </button>
+                                className="h-8! w-8! text-[#646a73]! hover:text-[#722ed1]!"
+                            />
                             {bulkMode ? (
                                 <span className="min-w-0 flex-1 truncate text-[16px] font-semibold text-[#1f2329]">选择对话</span>
                             ) : (
@@ -391,21 +391,18 @@ const App = () => {
                         </div>
                         <Space size={8} align="center">
                             {bulkMode ? (
-                                <button
-                                    className="cursor-pointer rounded-lg px-3 py-1.5 text-[14px] text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#1f2329]"
-                                    onClick={exitBulkMode}
-                                >
+                                <Button type="text" onClick={exitBulkMode} className="px-3! py-1.5! text-[14px]! text-[#646a73]!">
                                     取消
-                                </button>
+                                </Button>
                             ) : (
                                 <>
-                                    <button
-                                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[15px] text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                                    <Button
+                                        type="text"
+                                        icon={<DatabaseOutlined />}
                                         onClick={() => setStorageOpen(true)}
                                         title="会话存储管理"
-                                    >
-                                        <DatabaseOutlined />
-                                    </button>
+                                        className="h-8! w-8! text-[#646a73]! hover:text-[#722ed1]!"
+                                    />
                                 </>
                             )}
                         </Space>
@@ -452,14 +449,10 @@ const App = () => {
                         </div>
                     </footer>
                     {bulkMode && (
-                        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e5e6eb] bg-white/95 py-3 backdrop-blur">
-                            <button
-                                className="mx-auto flex cursor-pointer items-center justify-center rounded-full bg-[#f53f3f] px-12 py-2.5 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                                disabled={selected.size === 0}
-                                onClick={confirmDeleteSelected}
-                            >
+                        <div className="fixed inset-x-0 bottom-0 z-50 flex justify-end border-t border-[#e5e6eb] bg-white/95 py-3 pr-6 backdrop-blur">
+                            <Button type="primary" danger shape="round" disabled={selected.size === 0} onClick={confirmDeleteSelected} className="px-12!">
                                 删除
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>

@@ -1,4 +1,5 @@
 import { CloseOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 import { useRef, useState } from 'react';
 import { extOf, formatSize, getFileMeta } from '../utils/fileMeta';
 import MonacoEditor from './MonacoEditor';
@@ -109,13 +110,13 @@ const FilePreview = ({ file, onClose }) => {
                         {meta.type} · {formatSize(file.size)}
                     </span>
                 </div>
-                <button
-                    className="ml-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-lg text-base text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#1f2329]"
+                <Button
+                    type="text"
+                    icon={<CloseOutlined />}
                     onClick={onClose}
                     title="关闭"
-                >
-                    <CloseOutlined />
-                </button>
+                    className="ml-auto! h-8! w-8! text-[#8a9099]! hover:text-[#1f2329]!"
+                />
             </header>
             <div className="min-h-0 flex-1 p-2">
                 <MonacoEditor value={file.content} language={LANG_OF[extOf(file.name)] || 'plaintext'} readOnly />

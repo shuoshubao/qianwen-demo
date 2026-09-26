@@ -1,8 +1,8 @@
-import { CheckOutlined, CopyOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import { Checkbox, Image, Space } from 'antd';
+import { CopyOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Checkbox, Image, Space, Tooltip } from 'antd';
 import { cn } from 'cn';
 import { isEqual, pick } from 'lodash';
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { splitThinking } from '../api/ollama';
 import { useRunner } from '../runnerContext';
 import { getFileMeta } from '../utils/fileMeta';
@@ -20,46 +20,34 @@ const formatTime = ts => {
 };
 
 const MessageMeta = ({ time, text, align, showTime = true, onDelete }) => {
-    const [copied, setCopied] = useState(false);
-    const copy = async () => {
-        if (!text) {
-            return;
-        }
-        try {
-            await navigator.clipboard.writeText(text);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        } catch {
-            /* ignore */
-        }
-    };
     return (
         <Space
             size={10}
             align="center"
-            className={cn(
-                'text-xs text-[#a8adb5] opacity-0 transition-opacity group-hover:opacity-100',
-                align === 'right' ? 'justify-end' : 'justify-start'
-            )}
+            className={cn('text-xs text-[#a8adb5] opacity-0 transition-opacity group-hover:opacity-100', align === 'right' ? 'justify-end' : 'justify-start')}
         >
             {showTime && <span className="leading-none">{formatTime(time)}</span>}
-            <button
-                className="inline-flex cursor-pointer items-center gap-1 rounded p-0.5 text-xs leading-none text-[#a8adb5] hover:text-[#722ed1]"
-                onClick={copy}
-                title="复制"
-            >
-                {copied ? <CheckOutlined /> : <CopyOutlined />}
-                <span>{copied ? '已复制' : '复制'}</span>
-            </button>
+            <Tooltip title="复制">
+                <Button
+                    type="text"
+                    icon={<CopyOutlined />}
+                    onClick={() => {
+                        if (text) {
+                            navigator.clipboard.writeText(text);
+                        }
+                    }}
+                    className="p-0.5 text-xs leading-none text-[#a8adb5]! hover:text-[#722ed1]!"
+                />
+            </Tooltip>
             {onDelete && (
-                <button
-                    className="inline-flex cursor-pointer items-center gap-1 rounded p-0.5 text-xs leading-none text-[#a8adb5] hover:text-[#f53f3f]"
-                    onClick={onDelete}
-                    title="删除"
-                >
-                    <DeleteOutlined />
-                    <span>删除</span>
-                </button>
+                <Tooltip title="删除">
+                    <Button
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        onClick={onDelete}
+                        className="p-0.5 text-xs leading-none text-[#a8adb5]! hover:text-[#f53f3f]!"
+                    />
+                </Tooltip>
             )}
         </Space>
     );
@@ -153,7 +141,7 @@ const MessageItem = memo(
                     {bulkMode && <Checkbox className="mt-3.5" checked={checked} onChange={() => onToggleSelect(message.id)} />}
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                         <ReasoningPanel reasoning={reasoning} thinking={thinking} />
-                        <div className="w-full rounded-[14px] bg-white px-4 py-3 text-[15px] leading-[1.75] text-[#1f2329]">
+                        <div className={cn('w-full text-[15px] leading-[1.75] text-[#1f2329]', bulkMode && 'px-4 py-3')}>
                             {isEmpty && streaming ? (
                                 <span className="inline-flex h-5 items-center gap-1">
                                     <i className="h-1.5 w-1.5 rounded-full bg-[#b5bcc7] [animation:blink_1.2s_infinite_ease-in-out]"></i>

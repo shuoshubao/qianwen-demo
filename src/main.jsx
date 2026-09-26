@@ -6,7 +6,7 @@ import './index.css';
 
 createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-        <ConfigProvider theme={{ token: { colorPrimary: '#722ed1' } }}>
+        <ConfigProvider theme={{ token: { colorPrimary: '#722ed1', colorLink: '#722ed1' } }} componentSize="small">
             <App />
         </ConfigProvider>
     </React.StrictMode>

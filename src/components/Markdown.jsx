@@ -1,7 +1,7 @@
 import { PlayCircleOutlined } from '@ant-design/icons';
-import { Space } from 'antd';
+import { Button, Space, Typography } from 'antd';
 import 'highlight.js/styles/github.css';
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
@@ -64,7 +64,6 @@ const nodeText = node => {
 };
 
 const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
-    const [copied, setCopied] = useState(false);
     const { openRunner } = useRunner();
     const blocks = useContext(BlocksContext);
     const lang = /language-([\w-]+)/.exec(className || '')?.[1] || '';
@@ -112,16 +111,6 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
         openRunner(files);
     };
 
-    const copy = async () => {
-        try {
-            await navigator.clipboard.writeText(code);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        } catch {
-            /* ignore */
-        }
-    };
-
     return (
         <div className="mb-3 overflow-hidden rounded-[10px] border border-[#e5e6eb] bg-[#fbfbfc]">
             <div className="flex items-center justify-between bg-[#f2f3f5] px-3 py-1.5 text-xs text-[#646a73]">
@@ -133,20 +122,19 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                 {!streaming && (
                     <Space size={4} align="center">
                         {runnable && (
-                            <button
-                                className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
+                            <Button
+                                type="text"
+                                icon={<PlayCircleOutlined />}
                                 onClick={run}
                                 title="运行预览"
+                                className="text-[#722ed1]! hover:bg-[rgba(114,46,209,0.1)]!"
                             >
-                                <PlayCircleOutlined /> 运行
-                            </button>
+                                运行
+                            </Button>
                         )}
-                        <button
-                            className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
-                            onClick={copy}
-                        >
-                            {copied ? '已复制' : '复制'}
-                        </button>
+                        <Typography.Text copyable={{ text: code }} className="rounded px-1.5 py-0.5 text-xs text-[#722ed1]">
+                            复制
+                        </Typography.Text>
                     </Space>
                 )}
             </div>

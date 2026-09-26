@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, MoreOutlined } from '@ant-design/icons';
-import { Dropdown, Input, Modal } from 'antd';
+import { Button, Dropdown, Input, Modal } from 'antd';
 import { cn } from 'cn';
 import { useState } from 'react';
 
@@ -53,13 +53,19 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
     return (
         <aside className="flex h-full w-[250px] flex-shrink-0 flex-col border-r border-black/5 bg-[#f7f8fa]">
             <div className="p-3 pb-2">
-                <button
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-[10px] px-3 py-2 text-[13px] text-[#1f2329] transition-colors hover:bg-[#eef0f4] disabled:cursor-not-allowed disabled:opacity-50"
-                    onClick={onNew}
-                    disabled={disabled}
+                <div
+                    className={cn(
+                        'flex w-full items-center gap-2 rounded-[10px] px-3 py-2.5 text-[13px] text-[#1f2329] transition-colors',
+                        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-[#eef0f4]'
+                    )}
+                    onClick={() => {
+                        if (!disabled) {
+                            onNew();
+                        }
+                    }}
                 >
                     <ChatIcon className="h-[18px] w-[18px]" /> 新对话
-                </button>
+                </div>
             </div>
 
             <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3">
@@ -96,13 +102,13 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                                 }
                             }}
                         >
-                            <button
-                                className="ml-1 flex-shrink-0 cursor-pointer rounded p-1 text-sm text-[#8a9099] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#e7e9ee] hover:text-[#1f2329]"
+                            <Button
+                                type="text"
+                                icon={<MoreOutlined />}
                                 onClick={e => e.stopPropagation()}
                                 title="更多操作"
-                            >
-                                <MoreOutlined />
-                            </button>
+                                className="ml-1! text-[#8a9099]! opacity-0 transition-opacity group-hover:opacity-100! hover:text-[#1f2329]!"
+                            />
                         </Dropdown>
                     </div>
                 ))}
