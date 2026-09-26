@@ -124,7 +124,14 @@ const MessageItem = memo(({ message, streaming, bulkMode, checked, onToggleSelec
                                 {message.content}
                             </div>
                         )}
-                        {!bulkMode && <MessageMeta time={message.time} text={message.content} align="right" onDelete={showDelete ? onDelete : undefined} />}
+                        {!bulkMode && (
+                            <MessageMeta
+                                time={message.time}
+                                text={message.content}
+                                align="right"
+                                onDelete={showDelete ? () => onDelete(message.id) : undefined}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
@@ -158,7 +165,7 @@ const MessageItem = memo(({ message, streaming, bulkMode, checked, onToggleSelec
                             text={answer || message.content}
                             align="left"
                             showTime={false}
-                            onDelete={showDelete ? onDelete : undefined}
+                            onDelete={showDelete ? () => onDelete(message.id) : undefined}
                         />
                     )}
                 </div>

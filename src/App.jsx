@@ -256,17 +256,35 @@ const App = () => {
         abortRef.current?.abort();
     };
 
-    const enterBulkMode = () => {
+    const enterBulkMode = id => {
         if (loading) {
             return;
         }
         setBulkMode(true);
+        // 从哪条消息进入就默认选中哪条
+        setSelected(new Set([id]));
     };
 
     const exitBulkMode = () => {
         setBulkMode(false);
         setSelected(new Set());
     };
+
+    // 批量模式下按 Esc 退出
+    useEffect(() => {
+        if (!bulkMode) {
+            return;
+        }
+        const onKeyDown = e => {
+            if (e.key === 'Escape') {
+                exitBulkMode();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, [bulkMode]);
 
     const toggleSelect = id => {
         setSelected(prev => {
