@@ -2,6 +2,7 @@ import { CheckOutlined, CopyOutlined } from '@ant-design/icons';
 import { cn } from 'cn';
 import { memo, useState } from 'react';
 import { splitThinking } from '../api/ollama';
+import { getFileMeta } from '../utils/fileMeta';
 import Markdown from './Markdown';
 import ReasoningPanel from './ReasoningPanel';
 
@@ -54,19 +55,34 @@ const MessageItem = memo(({ message, streaming }) => {
     const isUser = message.role === 'user';
 
     if (isUser) {
+        const atts = message.attachments || [];
         return (
             <div className="group mb-6 flex flex-col items-end">
+                {atts.length > 0 && (
+                    <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
+                        {atts.map((item, index) => {
+                            if (item.kind === 'image') {
+                                return <img key={index} src={item.data} alt="attachment" className="h-[52px] w-[52px] rounded-lg object-cover" />;
+                            }
+                            const meta = getFileMeta(item.name);
+                            return (
+                                <div key={index} className="flex h-[54px] w-[200px] items-center gap-2 rounded-[10px] bg-[#f2f3f5] px-3" title={item.name}>
+                                    <img src={meta.icon} alt="" className="h-7 w-7 flex-shrink-0" />
+                                    <div className="flex min-w-0 flex-col">
+                                        <span className="truncate text-[14px] leading-[1.35] font-medium text-[#1f2329]">{item.name}</span>
+                                        <span className="text-xs leading-[1.35] text-[#8a9099]">{meta.type}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
                 <div className="flex max-w-[85%] flex-col items-end gap-2">
-                    {message.images?.length > 0 && (
-                        <div className="flex flex-wrap justify-end gap-2">
-                            {message.images.map((item, index) => (
-                                <img key={index} src={item} alt="upload" className="max-h-[180px] max-w-[180px] rounded-[10px] object-cover" />
-                            ))}
+                    {message.content && (
+                        <div className="rounded-[14px] bg-[#f2f3f5] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-[#1f2329]">
+                            {message.content}
                         </div>
                     )}
-                    <div className="rounded-[14px] bg-[#f2f3f5] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-[#1f2329]">
-                        {message.content}
-                    </div>
                     <MessageMeta time={message.time} text={message.content} align="right" />
                 </div>
             </div>

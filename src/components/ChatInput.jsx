@@ -1,24 +1,15 @@
-import { ArrowUpOutlined, CloseOutlined, FileTextOutlined, PaperClipOutlined } from '@ant-design/icons';
-import { useRef, useState } from 'react';
+import { ArrowUpOutlined, CloseOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { message } from 'antd';
+import { useRef, useState } from 'react';
+import { formatSize, getFileMeta } from '../utils/fileMeta';
 
 // 文本文件大小上限, 超出提示跳过 (避免撑爆上下文)
 const FILE_LIMIT = 512 * 1024;
 
-const formatSize = bytes => {
-    if (bytes < 1024) {
-        return `${bytes} B`;
-    }
-    if (bytes < 1024 * 1024) {
-        return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-};
-
 const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     const [text, setText] = useState('');
-    const [images, setImages] = useState([]); // { url, base64 }
-    const [files, setFiles] = useState([]); // { name, size, content }
+    // 按选择顺序统一存放: { kind: 'image', url, base64 } | { kind: 'file', name, size, content }
+    const [attachments, setAttachments] = useState([]);
     const fileRef = useRef(null);
     const taRef = useRef(null);
 
@@ -30,8 +21,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     // 图片走 images 字段 (base64), 其他文件读取文本内容拼入消息
     const pickFiles = async e => {
         const picked = Array.from(e.target.files || []);
-        const nextImages = [];
-        const nextFiles = [];
+        const next = [];
         for (const item of picked) {
             if (item.type.startsWith('image/')) {
                 const url = URL.createObjectURL(item);
@@ -40,22 +30,21 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                     r.onload = () => resolve(String(r.result).split(',')[1] || '');
                     r.readAsDataURL(item);
                 });
-                nextImages.push({ url, base64 });
+                next.push({ kind: 'image', url, base64 });
             } else {
                 if (item.size > FILE_LIMIT) {
                     message.warning(`文件 ${item.name} 超过 512KB, 已跳过`);
                     continue;
                 }
-                nextFiles.push({ name: item.name, size: item.size, content: await item.text() });
+                next.push({ kind: 'file', name: item.name, size: item.size, content: await item.text() });
             }
         }
-        setImages(prev => [...prev, ...nextImages]);
-        setFiles(prev => [...prev, ...nextFiles]);
+        setAttachments(prev => [...prev, ...next]);
         e.target.value = '';
     };
 
-    const removeImage = index => {
-        setImages(prev => prev.filter((item, index1) => index1 !== index));
+    const removeAttachment = index => {
+        setAttachments(prev => prev.filter((item, index1) => index1 !== index));
     };
 
     const submit = () => {
@@ -63,18 +52,12 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
             return;
         }
         const value = text.trim();
-        if (!value && images.length === 0 && files.length === 0) {
+        if (!value && attachments.length === 0) {
             return;
         }
-        // 文本文件按代码块拼入消息内容, 模型按文本分析; 图片仍走 images 字段
-        const fileText = files.map(item => {
-            const ext = item.name.includes('.') ? item.name.split('.').pop() : '';
-            return `[文件: ${item.name}]\n\`\`\`${ext}\n${item.content}\n\`\`\``;
-        });
-        onSend([value, ...fileText].filter(Boolean).join('\n\n'), images);
+        onSend(value, attachments);
         setText('');
-        setImages([]);
-        setFiles([]);
+        setAttachments([]);
         if (taRef.current) {
             taRef.current.style.height = 'auto';
         }
@@ -87,40 +70,51 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
         }
     };
 
-    const canSend = (text.trim() || images.length > 0 || files.length > 0) && !loading;
+    const canSend = (text.trim() || attachments.length > 0) && !loading;
 
     return (
         <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#722ed1]">
-            {images.length > 0 && (
-                <div className="flex flex-wrap gap-2 px-1.5 pt-1.5 pb-2.5">
-                    {images.map((item, index) => (
-                        <div className="relative" key={index}>
-                            <img src={item.url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-                            <button
-                                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white"
-                                onClick={() => removeImage(index)}
+            {attachments.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 px-1.5 pt-1.5 pb-2.5">
+                    {attachments.map((item, index) => {
+                        if (item.kind === 'image') {
+                            return (
+                                <div className="group relative" key={index}>
+                                    <img src={item.url} alt="preview" className="h-[52px] w-[52px] rounded-lg object-cover" />
+                                    <button
+                                        className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                        onClick={() => removeAttachment(index)}
+                                        title="移除"
+                                    >
+                                        <CloseOutlined />
+                                    </button>
+                                </div>
+                            );
+                        }
+                        const meta = getFileMeta(item.name);
+                        return (
+                            <div
+                                key={index}
+                                className="group relative flex h-[54px] w-[200px] items-center gap-2 rounded-[10px] bg-[#f2f3f5] px-3"
+                                title={item.name}
                             >
-                                <CloseOutlined />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            )}
-            {files.length > 0 && (
-                <div className="flex flex-wrap gap-2 px-1.5 pt-1.5 pb-2.5">
-                    {files.map((item, index) => (
-                        <div key={index} className="flex items-center gap-1.5 rounded-lg border border-[#e5e6eb] bg-[#f7f8fa] py-1.5 pr-1.5 pl-2.5">
-                            <FileTextOutlined className="text-[#722ed1]" />
-                            <span className="max-w-[180px] truncate text-[13px] text-[#1f2329]">{item.name}</span>
-                            <span className="text-xs text-[#8a9099]">{formatSize(item.size)}</span>
-                            <button
-                                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-[10px] text-[#8a9099] hover:bg-[#e7e9ee] hover:text-[#1f2329]"
-                                onClick={() => setFiles(prev => prev.filter((item1, index1) => index1 !== index))}
-                            >
-                                <CloseOutlined />
-                            </button>
-                        </div>
-                    ))}
+                                <img src={meta.icon} alt="" className="h-7 w-7 flex-shrink-0" />
+                                <div className="flex min-w-0 flex-col">
+                                    <span className="truncate text-[14px] leading-[1.35] font-medium text-[#1f2329]">{item.name}</span>
+                                    <span className="text-xs leading-[1.35] text-[#8a9099]">
+                                        {meta.type} · {formatSize(item.size)}
+                                    </span>
+                                </div>
+                                <button
+                                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                    onClick={() => removeAttachment(index)}
+                                    title="移除"
+                                >
+                                    <CloseOutlined />
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
             <textarea
