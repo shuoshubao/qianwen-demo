@@ -1,15 +1,25 @@
 import { PlayCircleOutlined } from '@ant-design/icons';
-import 'highlight.js/styles/github.css';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import { useRunner } from '../runnerContext';
-import { rehypeFileNames } from '../utils/projectFiles';
+import MonacoEditor from './MonacoEditor';
 
-// 支持运行的语言: 仅限本身可独立渲染成完整页面的文档,
-// css/js 片段拼出预览是空白页, 无需运行按钮 (见 CodeRunner.buildHtml)
+// 支持运行的语言: 仅限本身可独立渲染成完整页面的文档
 const RUNNABLE_LANGS = ['html', 'xml', 'svg'];
+
+// 语言 -> Monaco 内部语言标识
+const MONACO_LANG = {
+    html: 'html',
+    xml: 'html',
+    svg: 'html',
+    css: 'css',
+    js: 'javascript',
+    javascript: 'javascript',
+    ts: 'typescript',
+    typescript: 'typescript',
+    json: 'json'
+};
 
 // 提供给各代码块注册自身, 点击运行时把同一 Markdown 里的所有代码块归组成一个项目
 const BlocksContext = createContext(null);
@@ -27,20 +37,22 @@ const DEFAULT_NAMES = {
     json: 'data.json'
 };
 
+// 代码块高度: 按行数估算, 超高内部滚动
+const blockHeight = (text, max = 420) => {
+    const lines = (text.match(/\n/g)?.length || 0) + 1;
+    return Math.min(Math.max(lines * 20 + 16, 56), max);
+};
+
 const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
     const [copied, setCopied] = useState(false);
-    const preRef = useRef(null);
     const { openRunner } = useRunner();
     const blocks = useContext(BlocksContext);
-    const lang = /language-(\w+)/.exec(className || '')?.[1] || '';
-
-    // 挂载时注册到所属 Markdown 的代码块集合, 供"运行"按钮收集整个项目;
-    // 仅带语言标注的块级代码参与 (行内 code / 无语言代码块会生成 .txt 噪音文件)
-    useEffect(() => {
-        if (!blocks || !lang) return;
-        return blocks.register({ lang, getText: () => preRef.current?.innerText ?? '' });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const lang = /language-([\w-]+)/.exec(className || '')?.[1] || '';
+    // "```语言:文件名" 的文件名标注, 未标注时为 null (回退 DEFAULT_NAMES)
+    const fileName = /language-[\w-]+:([^\s`]+)/.exec(className || '')?.[1] || null;
+    const code = String(children ?? '').trimEnd(); // fenced code 尾部的换行会让 Monaco 多渲染一个空行
+    const codeRef = useRef(code);
+    codeRef.current = code; // 流式输出时内容持续变化, 供运行按钮读取最新值
 
     // react-markdown v9 不再传 inline prop, 带 language-* 类名的是块级代码,
     // 否则 (如段落内的 `code`) 按行内渲染, 避免 div/pre 嵌套进 <p>
@@ -51,32 +63,35 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
             </code>
         );
     }
-    const runnable = RUNNABLE_LANGS.includes(lang);
 
-    const codeText = () => preRef.current?.innerText ?? '';
+    // 挂载时注册到所属 Markdown 的代码块集合, 供"运行"按钮收集整个项目
+    useEffect(() => {
+        if (!blocks) return;
+        return blocks.register({ lang, name: fileName, getText: () => codeRef.current });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const runnable = RUNNABLE_LANGS.includes(lang);
 
     // 收集当前 Markdown 内全部代码块组成项目文件列表, 未标注文件名的用默认名(同名去重)
     const run = () => {
         if (!blocks) return;
         const used = new Set();
-        const files = blocks.collect().map(b => {
-            let name = b.name || DEFAULT_NAMES[b.lang] || `${b.lang}.txt`;
+        const files = blocks.collect().map(item => {
+            let name = item.name || DEFAULT_NAMES[item.lang] || `${item.lang}.txt`;
             if (used.has(name)) {
                 const dot = name.lastIndexOf('.');
                 name = `${name.slice(0, dot)}-${used.size}${name.slice(dot)}`;
             }
             used.add(name);
-            return { name, lang: b.lang, code: b.getText() };
+            return { name, lang: item.lang, code: item.getText() };
         });
         openRunner(files);
     };
 
-    // children 经 rehype-highlight 处理后是高亮 span 元素数组,
-    // 直接转字符串会得到 [object Object], 改为从 DOM 取纯文本
     const copy = async () => {
         try {
-            const text = codeText();
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(code);
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch {
@@ -87,7 +102,10 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
     return (
         <div className="mb-3 overflow-hidden rounded-[10px] border border-[#e5e6eb] bg-[#fbfbfc]">
             <div className="flex items-center justify-between bg-[#f2f3f5] px-3 py-1.5 text-xs text-[#646a73]">
-                <span className="uppercase tracking-[0.5px]">{lang || 'text'}</span>
+                <span className="uppercase tracking-[0.5px]">
+                    {lang}
+                    {fileName ? ` · ${fileName}` : ''}
+                </span>
                 {/* 流式生成中内容还在变化, 隐藏操作按钮 */}
                 {!streaming && (
                     <div className="flex items-center gap-1">
@@ -109,24 +127,23 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                     </div>
                 )}
             </div>
-            <pre ref={preRef} className={className}>
-                <code className={className} {...rest}>
-                    {children}
-                </code>
-            </pre>
+            {/* 只读 Monaco 渲染, 行号 + 语法高亮 */}
+            <div style={{ height: blockHeight(code) }}>
+                <MonacoEditor value={code} language={MONACO_LANG[lang] || 'plaintext'} readOnly />
+            </div>
         </div>
     );
 };
 
 const Markdown = ({ children, streaming }) => {
-    // 收集当前渲染中的所有代码块 (供"运行"按钮把同一条回复里的 css/js 片段归组进项目)
+    // 收集当前渲染中的所有代码块 (供"运行"按钮把同一条回复里的代码块归组进项目)
     const blocksRef = useRef([]);
     const ctx = useMemo(
         () => ({
             register: entry => {
                 blocksRef.current = [...blocksRef.current, entry];
                 return () => {
-                    blocksRef.current = blocksRef.current.filter(x => x !== entry);
+                    blocksRef.current = blocksRef.current.filter(item => item !== entry);
                 };
             },
             collect: () => [...blocksRef.current]
@@ -139,10 +156,8 @@ const Markdown = ({ children, streaming }) => {
             <BlocksContext.Provider value={ctx}>
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeFileNames, rehypeHighlight]}
                     components={{
-                        // react-markdown 默认渲染 <pre><code>, 而 CodeBlock 非行内分支自带 pre,
-                        // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套 (双 pre 样式叠加)
+                        // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套
                         pre: ({ children }) => <>{children}</>,
                         code: props => <CodeBlock {...props} streaming={streaming} />
                     }}

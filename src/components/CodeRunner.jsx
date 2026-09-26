@@ -117,11 +117,37 @@ const buildTreeData = files => {
     return root;
 };
 
+// 预览窗口宽度限制 (拖拽调整, 记忆上次宽度)
+const RUNNER_MIN = 320;
+const RUNNER_DEFAULT = 480;
+const clampRunnerWidth = w => Math.min(Math.max(w, RUNNER_MIN), Math.floor(window.innerWidth * 0.8));
+
 const CodeRunner = ({ runner, onClose }) => {
     const [tab, setTab] = useState('preview'); // preview | source
     const [files, setFiles] = useState([]);
     const [active, setActive] = useState(0);
+    const [panelWidth, setPanelWidth] = useState(() => {
+        const saved = Number(localStorage.getItem('runner-panel-width'));
+        return saved >= RUNNER_MIN ? clampRunnerWidth(saved) : RUNNER_DEFAULT;
+    });
     const editorApiRef = useRef(null); // Monaco 的 { getValue }
+    const panelWidthRef = useRef(panelWidth);
+    panelWidthRef.current = panelWidth;
+
+    // 左边缘拖拽调整窗口宽度
+    const startDrag = e => {
+        e.preventDefault();
+        document.body.style.userSelect = 'none';
+        const move = ev => setPanelWidth(clampRunnerWidth(window.innerWidth - ev.clientX));
+        const up = () => {
+            window.removeEventListener('mousemove', move);
+            window.removeEventListener('mouseup', up);
+            document.body.style.userSelect = '';
+            localStorage.setItem('runner-panel-width', String(panelWidthRef.current));
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+    };
 
     // 每次打开时重置
     useEffect(() => {
@@ -183,7 +209,15 @@ const CodeRunner = ({ runner, onClose }) => {
     if (!runner) return null;
 
     return (
-        <aside className="flex h-full w-[42%] min-w-[440px] max-w-[760px] flex-col border-l border-[#e5e6eb] bg-white [animation:runner-slide_0.25s_ease]">
+        <aside
+            className="relative flex h-full flex-shrink-0 flex-col border-l border-[#e5e6eb] bg-white [animation:runner-slide_0.25s_ease]"
+            style={{ width: panelWidth }}
+        >
+            <div
+                className="absolute -left-1 top-0 z-10 h-full w-2 cursor-col-resize transition-colors hover:bg-[rgba(114,46,209,0.12)]"
+                onMouseDown={startDrag}
+                title="拖拽调整窗口宽度"
+            />
             <header className="flex flex-shrink-0 items-center gap-2 px-4 py-3">
                 <div className="flex items-center gap-2 text-[15px] font-semibold text-[#1f2329]">
                     <span className="h-2 w-2 rounded-full bg-green-500" />

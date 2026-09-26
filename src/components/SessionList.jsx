@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Popconfirm } from 'antd';
 import { cn } from 'cn';
 import { useEffect, useRef, useState } from 'react';
@@ -42,11 +42,11 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
         <aside className="flex w-[250px] flex-shrink-0 flex-col border-r border-black/5 bg-[#f7f8fa]">
             <div className="p-3 pb-2">
                 <button
-                    className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-[10px] bg-[#722ed1] py-2 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-[#e5e6eb] bg-white py-2 text-[13px] font-medium text-[#1f2329] transition-colors hover:bg-[#f2f3f5] disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={onNew}
                     disabled={disabled}
                 >
-                    <PlusOutlined /> 新建对话
+                    <EditOutlined /> 新建对话
                 </button>
             </div>
 

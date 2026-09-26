@@ -18,7 +18,7 @@ const getLoader = () => {
     return loaderPromise;
 };
 
-const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
+const MonacoEditor = forwardRef(({ value, language, onChange, readOnly }, ref) => {
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
@@ -26,9 +26,11 @@ const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
     const valueRef = useRef(value);
     const langRef = useRef(language);
     const onChangeRef = useRef(onChange);
+    const readOnlyRef = useRef(readOnly);
     valueRef.current = value;
     langRef.current = language;
     onChangeRef.current = onChange;
+    readOnlyRef.current = readOnly;
 
     // 供父组件在切换 tab 时直接读取编辑器当前内容
     useImperativeHandle(ref, () => ({
@@ -46,7 +48,12 @@ const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
                     value: valueRef.current,
                     language: langRef.current,
                     theme: 'vs',
-                    minimap: { enabled: false },
+                    readOnly: !!readOnlyRef.current,
+                    domReadOnly: !!readOnlyRef.current,
+                    renderLineHighlight: readOnlyRef.current ? 'none' : 'line',
+                    overviewRulerLanes: readOnlyRef.current ? 0 : 3,
+                    contextmenu: !readOnlyRef.current,
+                    minimap: { enabled: true },
                     fontSize: 13,
                     lineHeight: 20,
                     tabSize: 2,

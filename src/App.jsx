@@ -13,6 +13,13 @@ import { RunnerContext } from './runnerContext';
 let idSeq = 0;
 const nextId = () => `m_${Date.now()}_${idSeq++}`;
 
+// 豆包同款侧边栏折叠图标 (panel-left)
+const SidebarIcon = ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.416 2.00098C7.82588 2.00992 6.39937 2.08214 5.27637 2.6543C4.14739 3.22954 3.22954 4.14739 2.6543 5.27637C2.00042 6.55977 2 8.23965 2 11.5996V12.4004L2.00098 13.584C2.00992 16.1741 2.08214 17.6006 2.6543 18.7236C3.22954 19.8526 4.14739 20.7705 5.27637 21.3457C6.39937 21.9179 7.82588 21.9901 10.416 21.999L11.5996 22H12.4004C15.5506 22 17.2241 21.9999 18.4785 21.4609L18.7236 21.3457C19.7819 20.8065 20.6554 19.9667 21.2344 18.9336L21.3457 18.7236C21.9179 17.6006 21.9901 16.1741 21.999 13.584L22 12.4004V11.5996C22 8.44937 21.9999 6.7759 21.4609 5.52148L21.3457 5.27637C20.8065 4.21805 19.9667 3.34459 18.9336 2.76562L18.7236 2.6543C17.4402 2.00042 15.7603 2 12.4004 2H11.5996L10.416 2.00098ZM12.4004 4C14.1132 4 15.2776 4.00167 16.1777 4.0752C17.0546 4.14684 17.5036 4.27617 17.8164 4.43555C18.5689 4.81902 19.181 5.43109 19.5645 6.18359C19.7238 6.49639 19.8532 6.94544 19.9248 7.82227C19.9983 8.72235 20 9.88678 20 11.5996V12.4004C20 14.1132 19.9983 15.2776 19.9248 16.1777C19.8532 17.0546 19.7238 17.5036 19.9248 17.8164C19.181 18.5689 18.5689 19.181 17.8164 19.5645C17.5036 19.7238 17.0546 19.8532 16.1777 19.9248C15.2776 19.9983 14.1132 20 12.4004 20H11.5996C11.0041 20 10.4749 19.9985 10 19.9951V4.00391C10.4749 4.00055 11.0041 4 11.5996 4H12.4004ZM8 19.9365C7.93964 19.9324 7.88035 19.9296 7.82227 19.9248C6.94543 19.8532 6.49639 19.7238 6.18359 19.5645C5.43109 19.181 4.81902 18.5689 4.43555 17.8164C4.27617 17.5036 4.14684 17.0546 4.0752 16.1777C4.00167 15.2776 4 14.1132 4 12.4004V11.5996C4 9.88678 4.00167 8.72235 4.0752 7.82227C4.14684 6.94544 4.27617 6.49639 4.43555 6.18359C4.81902 5.43109 5.43109 4.81902 6.18359 4.43555C6.49639 4.27617 6.94543 4.14684 7.82227 4.0752C7.88037 4.07045 7.93962 4.06667 8 4.0625V19.9365Z" />
+    </svg>
+);
+
 // 从库中读出的消息补上 _base64 (发给 Ollama 需要纯 base64), images 里存的是 data URL
 const hydrateMessages = list =>
     list.map(item => ({
@@ -28,6 +35,7 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [runner, setRunner] = useState(null); // { code, lang } | null
     const [storageOpen, setStorageOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === '1');
     const abortRef = useRef(null);
     const scrollRef = useRef(null);
     const stickToBottomRef = useRef(true); // 用户是否停留在底部, 上滚看历史时暂停自动滚动
@@ -75,6 +83,7 @@ const App = () => {
             if (session?.model) setModel(session.model);
             setMessages(hydrateMessages(msgs));
             stickToBottomRef.current = true;
+            setRunner(null); // 切会话时关闭预览模块
         } catch {
             /* ignore */
         }
@@ -213,34 +222,51 @@ const App = () => {
         abortRef.current?.abort();
     };
 
+    const toggleSidebar = () => {
+        const next = !sidebarCollapsed;
+        localStorage.setItem('sidebar-collapsed', next ? '1' : '0');
+        setSidebarCollapsed(next);
+    };
+
     const empty = messages.length === 0;
     const activeTitle = sessions.find(item => item.id === activeId)?.title;
 
     return (
         <RunnerContext.Provider value={{ openRunner: files => setRunner({ files }) }}>
             <div className="flex h-screen bg-[#edf0f5]">
-                <SessionList
-                    sessions={sessions}
-                    activeId={activeId}
-                    disabled={loading}
-                    onNew={newChat}
-                    onSwitch={switchSession}
-                    onDelete={handleDelete}
-                    onRename={handleRename}
-                />
+                <div className="flex-shrink-0 overflow-hidden transition-[width] duration-200" style={{ width: sidebarCollapsed ? 0 : 250 }}>
+                    <SessionList
+                        sessions={sessions}
+                        activeId={activeId}
+                        disabled={loading}
+                        onNew={newChat}
+                        onSwitch={switchSession}
+                        onDelete={handleDelete}
+                        onRename={handleRename}
+                    />
+                </div>
                 <div className="flex min-w-0 flex-1 flex-col">
                     <header className="flex items-center justify-between gap-4 border-b border-black/5 bg-white/80 px-6 py-3 backdrop-blur-md">
-                        <Typography.Title
-                            level={5}
-                            style={{ margin: 0 }}
-                            className="min-w-0 flex-1 truncate"
-                            editable={{
-                                onChange: value => handleRename(activeId, value),
-                                tooltip: '重命名会话'
-                            }}
-                        >
-                            {activeTitle || '新对话'}
-                        </Typography.Title>
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <button
+                                className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                                onClick={toggleSidebar}
+                                title={sidebarCollapsed ? '展开会话列表' : '收起会话列表'}
+                            >
+                                <SidebarIcon className="h-[18px] w-[18px]" />
+                            </button>
+                            <Typography.Title
+                                level={5}
+                                style={{ margin: 0 }}
+                                className="min-w-0 flex-1 truncate"
+                                editable={{
+                                    onChange: value => handleRename(activeId, value),
+                                    tooltip: '重命名会话'
+                                }}
+                            >
+                                {activeTitle || '新对话'}
+                            </Typography.Title>
+                        </div>
                         <div className="flex items-center gap-2">
                             <Select
                                 value={model}
