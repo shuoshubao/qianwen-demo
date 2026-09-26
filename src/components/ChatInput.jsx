@@ -1,9 +1,24 @@
-import { ArrowUpOutlined, CloseOutlined, PictureOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, CloseOutlined, FileTextOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { useRef, useState } from 'react';
+import { message } from 'antd';
+
+// 文本文件大小上限, 超出提示跳过 (避免撑爆上下文)
+const FILE_LIMIT = 512 * 1024;
+
+const formatSize = bytes => {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+};
 
 const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     const [text, setText] = useState('');
     const [images, setImages] = useState([]); // { url, base64 }
+    const [files, setFiles] = useState([]); // { name, size, content }
     const fileRef = useRef(null);
     const taRef = useRef(null);
 
@@ -12,19 +27,30 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
         el.style.height = Math.min(el.scrollHeight, 200) + 'px';
     };
 
-    const pickImages = async e => {
-        const files = Array.from(e.target.files || []);
-        const next = [];
-        for (const item of files) {
-            const url = URL.createObjectURL(item);
-            const base64 = await new Promise(resolve => {
-                const r = new FileReader();
-                r.onload = () => resolve(String(r.result).split(',')[1] || '');
-                r.readAsDataURL(item);
-            });
-            next.push({ url, base64 });
+    // 图片走 images 字段 (base64), 其他文件读取文本内容拼入消息
+    const pickFiles = async e => {
+        const picked = Array.from(e.target.files || []);
+        const nextImages = [];
+        const nextFiles = [];
+        for (const item of picked) {
+            if (item.type.startsWith('image/')) {
+                const url = URL.createObjectURL(item);
+                const base64 = await new Promise(resolve => {
+                    const r = new FileReader();
+                    r.onload = () => resolve(String(r.result).split(',')[1] || '');
+                    r.readAsDataURL(item);
+                });
+                nextImages.push({ url, base64 });
+            } else {
+                if (item.size > FILE_LIMIT) {
+                    message.warning(`文件 ${item.name} 超过 512KB, 已跳过`);
+                    continue;
+                }
+                nextFiles.push({ name: item.name, size: item.size, content: await item.text() });
+            }
         }
-        setImages(prev => [...prev, ...next]);
+        setImages(prev => [...prev, ...nextImages]);
+        setFiles(prev => [...prev, ...nextFiles]);
         e.target.value = '';
     };
 
@@ -33,13 +59,25 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     };
 
     const submit = () => {
-        if (loading) return;
+        if (loading) {
+            return;
+        }
         const value = text.trim();
-        if (!value && images.length === 0) return;
-        onSend(value, images);
+        if (!value && images.length === 0 && files.length === 0) {
+            return;
+        }
+        // 文本文件按代码块拼入消息内容, 模型按文本分析; 图片仍走 images 字段
+        const fileText = files.map(item => {
+            const ext = item.name.includes('.') ? item.name.split('.').pop() : '';
+            return `[文件: ${item.name}]\n\`\`\`${ext}\n${item.content}\n\`\`\``;
+        });
+        onSend([value, ...fileText].filter(Boolean).join('\n\n'), images);
         setText('');
         setImages([]);
-        if (taRef.current) taRef.current.style.height = 'auto';
+        setFiles([]);
+        if (taRef.current) {
+            taRef.current.style.height = 'auto';
+        }
     };
 
     const onKeyDown = e => {
@@ -49,7 +87,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
         }
     };
 
-    const canSend = (text.trim() || images.length > 0) && !loading;
+    const canSend = (text.trim() || images.length > 0 || files.length > 0) && !loading;
 
     return (
         <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#722ed1]">
@@ -68,31 +106,48 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                     ))}
                 </div>
             )}
-            <div className="flex items-end gap-2">
+            {files.length > 0 && (
+                <div className="flex flex-wrap gap-2 px-1.5 pt-1.5 pb-2.5">
+                    {files.map((item, index) => (
+                        <div key={index} className="flex items-center gap-1.5 rounded-lg border border-[#e5e6eb] bg-[#f7f8fa] py-1.5 pr-1.5 pl-2.5">
+                            <FileTextOutlined className="text-[#722ed1]" />
+                            <span className="max-w-[180px] truncate text-[13px] text-[#1f2329]">{item.name}</span>
+                            <span className="text-xs text-[#8a9099]">{formatSize(item.size)}</span>
+                            <button
+                                className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full text-[10px] text-[#8a9099] hover:bg-[#e7e9ee] hover:text-[#1f2329]"
+                                onClick={() => setFiles(prev => prev.filter((item1, index1) => index1 !== index))}
+                            >
+                                <CloseOutlined />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+            <textarea
+                ref={taRef}
+                className="max-h-[200px] w-full resize-none bg-transparent px-1 py-1 text-[15px] leading-[1.6] text-[#1f2329] outline-none"
+                placeholder="给 AI 发送消息, Enter 发送, Shift+Enter 换行"
+                value={text}
+                rows={1}
+                onChange={e => {
+                    setText(e.target.value);
+                    autoResize(e.target);
+                }}
+                onKeyDown={onKeyDown}
+            />
+            <div className="flex items-center justify-between pt-1.5">
                 {allowImage && (
                     <button
-                        className="cursor-pointer rounded-lg p-1.5 text-xl leading-none text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
-                        title="上传图片"
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-lg leading-none text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                        title="上传文件或图片"
                         onClick={() => fileRef.current?.click()}
                     >
-                        <PictureOutlined />
+                        <PaperClipOutlined />
                     </button>
                 )}
-                <textarea
-                    ref={taRef}
-                    className="max-h-[200px] flex-1 resize-none bg-transparent px-1 py-1.5 text-[15px] leading-[1.6] text-[#1f2329] outline-none"
-                    placeholder="给 AI 发送消息, Enter 发送, Shift+Enter 换行"
-                    value={text}
-                    rows={1}
-                    onChange={e => {
-                        setText(e.target.value);
-                        autoResize(e.target);
-                    }}
-                    onKeyDown={onKeyDown}
-                />
                 {loading ? (
                     <button
-                        className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1f2329] text-base text-white"
+                        className="ml-auto flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1f2329] text-base text-white"
                         onClick={onStop}
                         title="停止"
                     >
@@ -100,7 +155,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                     </button>
                 ) : (
                     <button
-                        className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#722ed1] to-[#9254de] text-base text-white transition-opacity disabled:cursor-not-allowed disabled:bg-[#d0d3d9]"
+                        className="ml-auto flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#722ed1] to-[#9254de] text-base text-white transition-opacity disabled:cursor-not-allowed disabled:bg-[#d0d3d9]"
                         disabled={!canSend}
                         onClick={submit}
                         title="发送"
@@ -109,7 +164,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                     </button>
                 )}
             </div>
-            <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={pickImages} />
+            <input ref={fileRef} type="file" multiple hidden onChange={pickFiles} />
         </div>
     );
 };
