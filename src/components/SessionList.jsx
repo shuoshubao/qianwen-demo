@@ -1,7 +1,7 @@
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Popconfirm } from 'antd';
+import { DeleteOutlined, EditOutlined, MoreOutlined } from '@ant-design/icons';
+import { Dropdown, Input, Modal } from 'antd';
 import { cn } from 'cn';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 const ChatIcon = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -16,20 +16,38 @@ const ChatIcon = ({ className }) => (
 const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, onRename }) => {
     const [editingId, setEditingId] = useState(null);
     const [draft, setDraft] = useState('');
-    const inputRef = useRef(null);
-
-    useEffect(() => {
-        if (editingId) inputRef.current?.select();
-    }, [editingId]);
+    const [error, setError] = useState('');
 
     const startEdit = item => {
         setEditingId(item.id);
         setDraft(item.title || '');
+        setError('');
     };
 
     const commitEdit = () => {
-        if (editingId && draft.trim()) onRename(editingId, draft.trim());
+        const text = draft.trim();
+        if (!text) {
+            setError('名称不能为空');
+            return;
+        }
+        if (text.length < 5 || text.length > 20) {
+            setError('名称长度需为 5-20 个字符');
+            return;
+        }
+        onRename(editingId, text);
         setEditingId(null);
+    };
+
+    // 删除确认走 Modal.confirm: Dropdown 菜单项内不适合嵌 Popconfirm
+    const confirmDelete = item => {
+        Modal.confirm({
+            title: '删除该会话?',
+            content: '会话内容将一并清除, 不可恢复',
+            okText: '删除',
+            cancelText: '取消',
+            okButtonProps: { danger: true },
+            onOk: () => onDelete(item.id)
+        });
     };
 
     return (
@@ -55,56 +73,54 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                         onClick={() => !disabled && onSwitch(item.id)}
                     >
                         <div className="min-w-0 flex-1">
-                            {editingId === item.id ? (
-                                <input
-                                    ref={inputRef}
-                                    className="w-full rounded border border-[#722ed1] bg-white px-1.5 py-0.5 text-[13px] text-[#1f2329] outline-none"
-                                    value={draft}
-                                    onChange={e => setDraft(e.target.value)}
-                                    onBlur={commitEdit}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter') commitEdit();
-                                        if (e.key === 'Escape') setEditingId(null);
-                                    }}
-                                    onClick={e => e.stopPropagation()}
-                                />
-                            ) : (
-                                <div className={cn('truncate text-[13px]', item.id === activeId ? 'text-[#722ed1]' : 'text-[#1f2329]')}>
-                                    {item.title || '新对话'}
-                                </div>
-                            )}
+                            <div className={cn('truncate text-[13px]', item.id === activeId ? 'text-[#722ed1]' : 'text-[#1f2329]')}>
+                                {item.title || '新对话'}
+                            </div>
                         </div>
 
-                        {editingId !== item.id && (
-                            <div
-                                className="absolute right-1.5 flex items-center gap-0.5 rounded-md bg-white/90 p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                        <Dropdown
+                            trigger={['click']}
+                            menu={{
+                                items: [
+                                    { key: 'rename', label: '重命名', icon: <EditOutlined /> },
+                                    { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true }
+                                ],
+                                onClick: ({ key, domEvent }) => {
+                                    domEvent.stopPropagation();
+                                    if (key === 'rename') startEdit(item);
+                                    if (key === 'delete') confirmDelete(item);
+                                }
+                            }}
+                        >
+                            <button
+                                className="ml-1 flex-shrink-0 cursor-pointer rounded p-1 text-sm text-[#8a9099] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#e7e9ee] hover:text-[#1f2329]"
                                 onClick={e => e.stopPropagation()}
+                                title="更多操作"
                             >
-                                <button
-                                    className="cursor-pointer rounded p-1 text-xs text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
-                                    title="重命名"
-                                    onClick={() => startEdit(item)}
-                                >
-                                    <EditOutlined />
-                                </button>
-                                <Popconfirm
-                                    title="删除该会话?"
-                                    description="会话内容将一并清除, 不可恢复"
-                                    okText="删除"
-                                    cancelText="取消"
-                                    okButtonProps={{ danger: true }}
-                                    onConfirm={() => onDelete(item.id)}
-                                >
-                                    <button className="cursor-pointer rounded p-1 text-xs text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#f53f3f]" title="删除">
-                                        <DeleteOutlined />
-                                    </button>
-                                </Popconfirm>
-                            </div>
-                        )}
+                                <MoreOutlined />
+                            </button>
+                        </Dropdown>
                     </div>
                 ))}
                 {sessions.length === 0 && <div className="px-3 py-6 text-center text-xs text-[#a8adb5]">暂无历史会话</div>}
             </div>
+
+            <Modal title="重命名会话" open={!!editingId} onOk={commitEdit} onCancel={() => setEditingId(null)} okText="确定" cancelText="取消" width={360}>
+                <Input
+                    autoFocus
+                    value={draft}
+                    maxLength={20}
+                    showCount
+                    status={error ? 'error' : ''}
+                    placeholder="输入新名称 (5-20 个字符)"
+                    onChange={e => {
+                        setDraft(e.target.value);
+                        if (error) setError('');
+                    }}
+                    onPressEnter={commitEdit}
+                />
+                {error && <div className="mt-1.5 text-xs text-[#f53f3f]">{error}</div>}
+            </Modal>
         </aside>
     );
 };
