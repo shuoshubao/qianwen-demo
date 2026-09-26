@@ -6,7 +6,9 @@ import Markdown from './Markdown';
 import ReasoningPanel from './ReasoningPanel';
 
 const formatTime = ts => {
-    if (!ts) return '';
+    if (!ts) {
+        return '';
+    }
     const d = new Date(ts);
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
@@ -16,7 +18,9 @@ const formatTime = ts => {
 const MessageMeta = ({ time, text, align }) => {
     const [copied, setCopied] = useState(false);
     const copy = async () => {
-        if (!text) return;
+        if (!text) {
+            return;
+        }
         try {
             await navigator.clipboard.writeText(text);
             setCopied(true);
@@ -60,7 +64,7 @@ const MessageItem = memo(({ message, streaming }) => {
                             ))}
                         </div>
                     )}
-                    <div className="rounded-[14px] bg-gradient-to-br from-[#722ed1] to-[#9254de] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-white">
+                    <div className="rounded-[14px] bg-[#f2f3f5] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-[#1f2329]">
                         {message.content}
                     </div>
                     <MessageMeta time={message.time} text={message.content} align="right" />
@@ -77,7 +81,7 @@ const MessageItem = memo(({ message, streaming }) => {
         <div className="group mb-6 flex flex-col">
             <div className="flex w-full flex-col gap-2">
                 <ReasoningPanel reasoning={reasoning} thinking={thinking} />
-                <div className="w-full rounded-[14px] bg-white px-4 py-3 text-[15px] leading-[1.75] text-[#1f2329] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                <div className="w-full rounded-[14px] bg-white px-4 py-3 text-[15px] leading-[1.75] text-[#1f2329]">
                     {isEmpty && streaming ? (
                         <span className="inline-flex h-5 items-center gap-1">
                             <i className="h-1.5 w-1.5 rounded-full bg-[#b5bcc7] [animation:blink_1.2s_infinite_ease-in-out]"></i>

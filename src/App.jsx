@@ -46,14 +46,20 @@ const App = () => {
         let cancelled = false;
         (async () => {
             const list = await listSessions();
-            if (cancelled) return;
+            if (cancelled) {
+                return;
+            }
             setSessions(list);
             if (list.length > 0) {
                 const first = list[0];
                 setActiveId(first.id);
-                if (first.model) setModel(first.model);
+                if (first.model) {
+                    setModel(first.model);
+                }
                 const msgs = await listMessages(first.id);
-                if (!cancelled) setMessages(hydrateMessages(msgs));
+                if (!cancelled) {
+                    setMessages(hydrateMessages(msgs));
+                }
             }
         })();
         return () => {
@@ -64,22 +70,30 @@ const App = () => {
     // 距底部 40px 以内视为贴底, 恢复自动滚动 (阈值容差避免浮点误差)
     const handleScroll = () => {
         const el = scrollRef.current;
-        if (!el) return;
+        if (!el) {
+            return;
+        }
         stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
     };
 
     useEffect(() => {
         const el = scrollRef.current;
-        if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
+        if (el && stickToBottomRef.current) {
+            el.scrollTop = el.scrollHeight;
+        }
     }, [messages]);
 
     const switchSession = async id => {
-        if (loading || id === activeId) return;
+        if (loading || id === activeId) {
+            return;
+        }
         try {
             const session = await getSession(id);
             const msgs = await listMessages(id);
             setActiveId(id);
-            if (session?.model) setModel(session.model);
+            if (session?.model) {
+                setModel(session.model);
+            }
             setMessages(hydrateMessages(msgs));
             stickToBottomRef.current = true;
             setRunner(null); // 切会话时关闭预览模块
@@ -89,7 +103,9 @@ const App = () => {
     };
 
     const newChat = () => {
-        if (loading) return;
+        if (loading) {
+            return;
+        }
         const id = crypto.randomUUID();
         const now = Date.now();
         const session = { id, title: '', model, createdAt: now, updatedAt: now };
@@ -101,7 +117,9 @@ const App = () => {
     };
 
     const handleDeleteMany = async ids => {
-        if (loading || ids.length === 0) return false;
+        if (loading || ids.length === 0) {
+            return false;
+        }
         try {
             for (const item of ids) await deleteSession(item);
             const idSet = new Set(ids);
@@ -125,7 +143,9 @@ const App = () => {
 
     const handleRename = (id, title) => {
         const t = (title || '').trim();
-        if (!id || !t) return;
+        if (!id || !t) {
+            return;
+        }
         updateSession(id, { title: t });
         setSessions(prev => prev.map(item => (item.id === id ? { ...item, title: t } : item)));
     };
@@ -178,7 +198,9 @@ const App = () => {
         // 组装发给 Ollama 的消息 (携带图片 base64), 带上该会话全部历史即上下文
         const payload = history.map(item => {
             const next = { role: item.role, content: item.content };
-            if (item._base64?.length) next.images = item._base64;
+            if (item._base64?.length) {
+                next.images = item._base64;
+            }
             return next;
         });
 
@@ -203,7 +225,9 @@ const App = () => {
         } finally {
             // 流式结束 (含中止/报错) 落库一次, 并刷新会话排序
             try {
-                if (full) await addMessage({ ...assistantMsg, sessionId: sid, content: full });
+                if (full) {
+                    await addMessage({ ...assistantMsg, sessionId: sid, content: full });
+                }
                 await updateSession(sid, {});
             } catch {
                 /* ignore */
@@ -232,7 +256,7 @@ const App = () => {
 
     return (
         <RunnerContext.Provider value={{ openRunner: files => setRunner({ files }) }}>
-            <div className="flex h-screen bg-[#edf0f5]">
+            <div className="flex h-screen bg-white">
                 <div className="flex-shrink-0 overflow-hidden transition-[width] duration-200" style={{ width: sidebarCollapsed ? 0 : 250 }}>
                     <SessionList
                         sessions={sessions}

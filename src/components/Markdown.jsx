@@ -47,8 +47,12 @@ const blockHeight = (text, max = 420) => {
 
 // 从 hast 节点树提取纯文本 (rehype-highlight 后 children 是高亮 span 树, 不能直接 String)
 const nodeText = node => {
-    if (!node) return '';
-    if (node.type === 'text') return node.value;
+    if (!node) {
+        return '';
+    }
+    if (node.type === 'text') {
+        return node.value;
+    }
     return (node.children || []).map(nodeText).join('');
 };
 
@@ -75,7 +79,9 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
 
     // 挂载时注册到所属 Markdown 的代码块集合, 供"运行"按钮收集整个项目
     useEffect(() => {
-        if (!blocks) return;
+        if (!blocks) {
+            return;
+        }
         return blocks.register({ lang, name: fileName, getText: () => codeRef.current });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -84,7 +90,9 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
 
     // 收集当前 Markdown 内全部代码块组成项目文件列表, 未标注文件名的用默认名(同名去重)
     const run = () => {
-        if (!blocks) return;
+        if (!blocks) {
+            return;
+        }
         const used = new Set();
         const files = blocks.collect().map(item => {
             let name = item.name || DEFAULT_NAMES[item.lang] || `${item.lang}.txt`;

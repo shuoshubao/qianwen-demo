@@ -4,7 +4,9 @@ import Markdown from './Markdown';
 
 const ReasoningPanel = ({ reasoning, thinking }) => {
     const [open, setOpen] = useState(true);
-    if (!reasoning) return null;
+    if (!reasoning) {
+        return null;
+    }
 
     return (
         <div className="overflow-hidden rounded-xl border border-[#eceef1] bg-[#f6f7f9]">

@@ -51,7 +51,9 @@ export const updateSession = (id, patch) =>
                 const getReq = store.get(id);
                 getReq.onsuccess = () => {
                     const cur = getReq.result;
-                    if (!cur) return;
+                    if (!cur) {
+                        return;
+                    }
                     store.put({ ...cur, ...patch, updatedAt: Date.now() });
                 };
                 t.oncomplete = () => resolve();

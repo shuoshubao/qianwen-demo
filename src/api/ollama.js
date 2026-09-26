@@ -33,7 +33,9 @@ export const streamChat = async ({ model, messages, signal, onToken }) => {
 
     while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+            break;
+        }
         buffer += decoder.decode(value, { stream: true });
 
         // Ollama 返回 NDJSON, 每行一个 JSON 对象
@@ -41,7 +43,9 @@ export const streamChat = async ({ model, messages, signal, onToken }) => {
         while ((idx = buffer.indexOf('\n')) !== -1) {
             const line = buffer.slice(0, idx).trim();
             buffer = buffer.slice(idx + 1);
-            if (!line) continue;
+            if (!line) {
+                continue;
+            }
             let data;
             try {
                 data = JSON.parse(line);

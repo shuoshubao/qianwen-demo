@@ -67,10 +67,14 @@ ${ERROR_GUARD}
     const normLang = l => (l === 'javascript' ? 'js' : l === 'typescript' ? 'ts' : l);
     const findFile = (href, lang) => {
         let f = files.find(x => x.name === href);
-        if (f) return f;
+        if (f) {
+            return f;
+        }
         const base = href.split('/').pop();
         f = files.find(x => x.name.split('/').pop() === base);
-        if (f) return f;
+        if (f) {
+            return f;
+        }
         return files.find(x => normLang(x.lang) === normLang(lang)) || null;
     };
 
@@ -79,14 +83,18 @@ ${ERROR_GUARD}
     // <link rel="stylesheet" href="..."> -> <style>...</style>
     html = html.replace(/<link\b[^>]*>/gi, tag => {
         const href = /href=["']([^"']+)["']/i.exec(tag)?.[1];
-        if (!href || !/stylesheet/i.test(tag) || !isLocalRef(href)) return tag;
+        if (!href || !/stylesheet/i.test(tag) || !isLocalRef(href)) {
+            return tag;
+        }
         const f = findFile(href, 'css');
         return f ? `<style>${f.code}</style>` : tag;
     });
 
     // <script src="..."></script> -> <script>...</script>
     html = html.replace(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (tag, src) => {
-        if (!isLocalRef(src)) return tag;
+        if (!isLocalRef(src)) {
+            return tag;
+        }
         const f = findFile(src, 'js');
         return f ? `<script>${f.code}</script>` : tag;
     });
@@ -171,7 +179,9 @@ const CodeRunner = ({ runner, onClose }) => {
     };
 
     const switchFile = i => {
-        if (i === active) return;
+        if (i === active) {
+            return;
+        }
         const val = editorApiRef.current?.getValue();
         if (val !== undefined) {
             setFiles(prev => prev.map((f, idx) => (idx === active ? { ...f, code: val } : f)));
@@ -206,7 +216,9 @@ const CodeRunner = ({ runner, onClose }) => {
     const hasFolders = useMemo(() => files.some(item => item.name.includes('/')), [files]);
     const activeName = files[active]?.name;
 
-    if (!runner) return null;
+    if (!runner) {
+        return null;
+    }
 
     return (
         <aside
@@ -245,7 +257,9 @@ const CodeRunner = ({ runner, onClose }) => {
                             onSelect={keys => {
                                 if (keys.length) {
                                     const index = files.findIndex(item => item.name === keys[0]);
-                                    if (index >= 0) switchFile(index);
+                                    if (index >= 0) {
+                                        switchFile(index);
+                                    }
                                 }
                             }}
                             blockNode

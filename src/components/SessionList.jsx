@@ -30,8 +30,8 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
             setError('名称不能为空');
             return;
         }
-        if (text.length < 5 || text.length > 20) {
-            setError('名称长度需为 5-20 个字符');
+        if (text.length < 4 || text.length > 20) {
+            setError('名称长度需为 4-20 个字符');
             return;
         }
         onRename(editingId, text);
@@ -87,8 +87,12 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                                 ],
                                 onClick: ({ key, domEvent }) => {
                                     domEvent.stopPropagation();
-                                    if (key === 'rename') startEdit(item);
-                                    if (key === 'delete') confirmDelete(item);
+                                    if (key === 'rename') {
+                                        startEdit(item);
+                                    }
+                                    if (key === 'delete') {
+                                        confirmDelete(item);
+                                    }
                                 }
                             }}
                         >
@@ -115,7 +119,9 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                     placeholder="输入新名称 (5-20 个字符)"
                     onChange={e => {
                         setDraft(e.target.value);
-                        if (error) setError('');
+                        if (error) {
+                            setError('');
+                        }
                     }}
                     onPressEnter={commitEdit}
                 />

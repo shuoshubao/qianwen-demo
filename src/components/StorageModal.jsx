@@ -4,13 +4,19 @@ import { getSessionStats } from '../db';
 
 // 字节数格式化: B / KB / MB
 const formatSize = bytes => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
     return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 };
 
 const formatTime = ts => {
-    if (!ts) return '-';
+    if (!ts) {
+        return '-';
+    }
     const d = new Date(ts);
     const pad = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;

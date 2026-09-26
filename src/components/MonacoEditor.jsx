@@ -42,7 +42,9 @@ const MonacoEditor = forwardRef(({ value, language, onChange, readOnly }, ref) =
         getLoader()
             .then(loader => loader.init())
             .then(monaco => {
-                if (disposed || !containerRef.current) return;
+                if (disposed || !containerRef.current) {
+                    return;
+                }
                 monacoRef.current = monaco;
                 const editor = monaco.editor.create(containerRef.current, {
                     value: valueRef.current,
@@ -76,8 +78,12 @@ const MonacoEditor = forwardRef(({ value, language, onChange, readOnly }, ref) =
     // 外部 value / language 变化时同步 (编辑中 value 与内部一致, 不会重复 setValue)
     useEffect(() => {
         const editor = editorRef.current;
-        if (!editor) return;
-        if (editor.getValue() !== (value ?? '')) editor.setValue(value ?? '');
+        if (!editor) {
+            return;
+        }
+        if (editor.getValue() !== (value ?? '')) {
+            editor.setValue(value ?? '');
+        }
         if (monacoRef.current) {
             monacoRef.current.editor.setModelLanguage(editor.getModel(), language);
         }

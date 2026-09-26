@@ -20,6 +20,7 @@
 -   使用最新 JavaScript 语法 (ES2022+): 箭头函数、可选链 `?.`、空值合并 `??`、解构、展开运算符、`crypto.randomUUID()` 等
 -   函数统一使用 `const fn = () => {}` 箭头函数形式, 不使用 `function` 声明 (包括 React 组件)
 -   不使用 `var`, 统一 `const` / `let`
+-   `if` 条件语句必须加大括号, 禁止单行 `if (condition) statement;` 写法 (包括单行的 `if (...) return;`, 统一写成 `if (...) { return; }`), `else` 同理
 
 ### React 组件
 
@@ -33,7 +34,7 @@
 -   不使用 CSS Modules / styled-components / 原生 CSS 文件, 全局样式集中在 `src/index.css`
 -   Tailwind 入口必须是 `src/index.css` (必须是 .css 扩展名, @tailwindcss/vite 不处理 .scss)
 -   少量全局样式写在 `src/index.css` 的 `@layer` 中, 支持嵌套写法
--   主题色: antd 主色 `#722ed1` (紫色), 页面背景 `#edf0f5`, 用户气泡蓝色渐变 `#3370ff -> #5b8cff`
+-   主题色: antd 主色 `#722ed1` (紫色), 页面背景白色, 侧边栏 `#f7f8fa`, 用户消息气泡浅灰背景 `#f2f3f5`
 
 ## 项目结构与数据
 
