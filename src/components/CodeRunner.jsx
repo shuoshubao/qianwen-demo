@@ -1,5 +1,6 @@
 import { CloseOutlined, CodeOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import { Button, Segmented, Space, Tooltip } from 'antd';
+import { clamp } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MonacoEditor from './MonacoEditor';
 
@@ -38,11 +39,11 @@ const EXT_MAP = {
 // iframe 内注入错误捕获, 把 JS 报错显示在预览页顶部
 const ERROR_GUARD = `<script>
 window.addEventListener('error', (e) => {
-    const el = document.getElementById('__error__') || (() => {
+    const el = document.getElementById('__error__') ?? (() => {
         const d = document.createElement('div');
         d.id = '__error__';
         d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff1f0;color:#cf1322;padding:8px 12px;font:12px/1.5 monospace;border-bottom:1px solid #ffa39e;white-space:pre-wrap;';
-        (document.body || document.documentElement).appendChild(d);
+        (document.body ?? document.documentElement).appendChild(d);
         return d;
     })();
     el.textContent = 'Error: ' + e.message;
@@ -59,9 +60,9 @@ const isLocalRef = url => !/^(?:[a-z]+:)?\/\//i.test(url) && !/^data:/i.test(url
  */
 const buildHtml = files => {
     const isHtml = f => ['html', 'xml', 'svg'].includes(f.lang);
-    const htmlFile = files.find(isHtml) || files[0];
+    const htmlFile = files.find(isHtml) ?? files[0];
 
-    // 兜底: 没有任何 html 文件时(理论上不会发生, 运行按钮只在 html 块上), 包一层完整模板
+    // 兜底: 没有 html 文件时包一层完整模板
     if (!isHtml(htmlFile)) {
         const style = htmlFile.lang === 'css' ? `<style>\n${htmlFile.code}\n</style>` : '';
         const script = htmlFile.lang === 'css' ? '' : `<script>\n${htmlFile.code}\n</script>`;
@@ -91,7 +92,7 @@ ${ERROR_GUARD}
         if (f) {
             return f;
         }
-        return files.find(x => normLang(x.lang) === normLang(lang)) || null;
+        return files.find(x => normLang(x.lang) === normLang(lang)) ?? null;
     };
 
     let html = htmlFile.code;
@@ -121,7 +122,7 @@ ${ERROR_GUARD}
 // 预览窗口宽度限制 (拖拽调整, 记忆上次宽度)
 const RUNNER_MIN = 320;
 const RUNNER_DEFAULT = 480;
-const clampRunnerWidth = w => Math.min(Math.max(w, RUNNER_MIN), Math.floor(window.innerWidth * 0.8));
+const clampRunnerWidth = w => clamp(w, RUNNER_MIN, Math.floor(window.innerWidth * 0.8));
 
 const CodeRunner = ({ runner, onClose }) => {
     const [tab, setTab] = useState('preview'); // preview | source
@@ -160,10 +161,10 @@ const CodeRunner = ({ runner, onClose }) => {
     }, [runner]);
 
     const activeFile = files[active];
-    const lang = activeFile ? LANG_MAP[activeFile.lang] || 'html' : 'html';
+    const lang = activeFile ? LANG_MAP[activeFile.lang] ?? 'html' : 'html';
 
     const showPreview = () => {
-        // 切换前确保编辑器实时内容已回写进 files (onChange 已同步, 这里只是兜底)
+        // 切换前回写编辑器内容 (onChange 已同步, 这里兜底)
         const val = editorApiRef.current?.getValue();
         if (val !== undefined) {
             setFiles(prev => prev.map((f, i) => (i === active ? { ...f, code: val } : f)));
@@ -182,13 +183,13 @@ const CodeRunner = ({ runner, onClose }) => {
         setActive(i);
     };
 
-    // 下载当前源码: 多文件下载内联完成的完整页面(单文件即可独立打开), 单文件维持原样
+    // 下载当前源码: 多文件内联成完整页面, 单文件维持原样
     const download = () => {
         let content;
         let name;
         if (files.length === 1) {
             content = files[0].code;
-            name = `index.${EXT_MAP[files[0].lang] || 'txt'}`;
+            name = `index.${EXT_MAP[files[0].lang] ?? 'txt'}`;
         } else {
             content = buildHtml(files);
             name = 'index.html';

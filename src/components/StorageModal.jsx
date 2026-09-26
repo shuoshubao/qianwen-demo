@@ -1,4 +1,5 @@
 import { Button, Modal, Popconfirm, Space, Table } from 'antd';
+import { keyBy } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';
 import { getSessionStats } from '../db';
 
@@ -46,9 +47,9 @@ const StorageModal = ({ open, onClose, sessions, onDeleteMany }) => {
 
     // 以 sessions 为准 (含无消息的空会话), 合并统计结果
     const rows = useMemo(() => {
-        const statMap = new Map(stats.map(item => [item.id, item]));
+        const statMap = keyBy(stats, 'id');
         return sessions.map(item => {
-            const stat = statMap.get(item.id) || { count: 0, size: 0 };
+            const stat = statMap[item.id] ?? { count: 0, size: 0 };
             return { ...item, ...stat };
         });
     }, [sessions, stats]);

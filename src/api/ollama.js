@@ -74,7 +74,7 @@ export const fileToBase64 = file => {
         const reader = new FileReader();
         reader.onload = () => {
             const result = reader.result;
-            const base64 = String(result).split(',')[1] || '';
+            const base64 = String(result).split(',')[1] ?? '';
             resolve(base64);
         };
         reader.onerror = reject;

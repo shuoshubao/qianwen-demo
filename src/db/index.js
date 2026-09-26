@@ -2,6 +2,7 @@
 // 库结构:
 //   sessions: { id, title, model, createdAt, updatedAt }  会话元信息, id 为 crypto.randomUUID()
 //   messages: { id, sessionId, role, content, attachments, time }  消息, 按 sessionId 建索引
+import { orderBy, sortBy } from 'lodash';
 const DB_NAME = 'qianwen-demo';
 const DB_VERSION = 1;
 const STORE_SESSIONS = 'sessions';
@@ -67,7 +68,7 @@ export const getSession = id => request(STORE_SESSIONS, 'readonly', store => sto
 
 export const listSessions = () => {
     return request(STORE_SESSIONS, 'readonly', store => store.getAll()).then(list => {
-        return (list || []).sort((item1, item2) => (item2.updatedAt || 0) - (item1.updatedAt || 0));
+        return orderBy(list ?? [], item => item.updatedAt ?? 0, 'desc');
     });
 };
 
@@ -89,7 +90,7 @@ export const deleteMessages = ids => {
 
 export const listMessages = sessionId => {
     return request(STORE_MESSAGES, 'readonly', store => store.index('sessionId').getAll(sessionId)).then(list => {
-        return (list || []).sort((item1, item2) => item1.time - item2.time);
+        return sortBy(list ?? [], item => item.time ?? 0);
     });
 };
 
@@ -109,8 +110,8 @@ export const getSessionStats = async () => {
         const req = db.transaction(STORE_MESSAGES, 'readonly').objectStore(STORE_MESSAGES).getAll();
         req.onsuccess = () => {
             const map = new Map();
-            for (const item of req.result || []) {
-                const cur = map.get(item.sessionId) || { count: 0, size: 0 };
+            for (const item of req.result ?? []) {
+                const cur = map.get(item.sessionId) ?? { count: 0, size: 0 };
                 cur.count += 1;
                 cur.size += jsonSize(item);
                 map.set(item.sessionId, cur);

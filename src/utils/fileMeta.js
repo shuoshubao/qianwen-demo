@@ -145,10 +145,10 @@ export const extOf = name => {
 };
 
 export const getFileMeta = name => {
-    const lower = (name || '').toLowerCase();
+    const lower = (name ?? '').toLowerCase();
     const ext = extOf(lower);
-    const icon = NAME_MAP[lower] || ICON_MAP[ext] || 'file';
-    return { icon: `${CDN}${icon}.svg`, type: TYPE_MAP[ext] || '文件' };
+    const icon = NAME_MAP[lower] ?? ICON_MAP[ext] ?? 'file';
+    return { icon: `${CDN}${icon}.svg`, type: TYPE_MAP[ext] ?? '文件' };
 };
 
 // 790B / 1KB / 1.5MB

@@ -24,7 +24,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }
 
     // 图片走 images 字段 (base64), 其他文件读取文本内容拼入消息
     const pickFiles = async e => {
-        const picked = Array.from(e.target.files || []);
+        const picked = Array.from(e.target.files ?? []);
         const next = [];
         for (const item of picked) {
             if (item.type.startsWith('image/')) {
@@ -36,7 +36,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }
                 const url = URL.createObjectURL(item);
                 const base64 = await new Promise(resolve => {
                     const r = new FileReader();
-                    r.onload = () => resolve(String(r.result).split(',')[1] || '');
+                    r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
                     r.readAsDataURL(item);
                 });
                 next.push({ kind: 'image', url, base64 });

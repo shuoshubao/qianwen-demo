@@ -1,5 +1,6 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
+import { clamp } from 'lodash';
 import { useRef, useState } from 'react';
 import { extOf, formatSize, getFileMeta } from '../utils/fileMeta';
 import MonacoEditor from './MonacoEditor';
@@ -62,7 +63,7 @@ const LANG_OF = {
 // 预览窗口宽度限制 (拖拽调整, 记忆上次宽度)
 const PREVIEW_MIN = 320;
 const PREVIEW_DEFAULT = 520;
-const clampPreviewWidth = w => Math.min(Math.max(w, PREVIEW_MIN), Math.floor(window.innerWidth * 0.8));
+const clampPreviewWidth = w => clamp(w, PREVIEW_MIN, Math.floor(window.innerWidth * 0.8));
 
 // 纯文件代码预览: 标题栏 + 只读编辑器, 无运行/下载/模式切换
 const FilePreview = ({ file, onClose }) => {
@@ -119,7 +120,7 @@ const FilePreview = ({ file, onClose }) => {
                 />
             </header>
             <div className="min-h-0 flex-1 p-2">
-                <MonacoEditor value={file.content} language={LANG_OF[extOf(file.name)] || 'plaintext'} readOnly />
+                <MonacoEditor value={file.content} language={LANG_OF[extOf(file.name)] ?? 'plaintext'} readOnly />
             </div>
         </aside>
     );

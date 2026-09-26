@@ -58,12 +58,12 @@ const MessageMeta = ({ time, text, align, showTime = true, onDelete }) => {
 const MessageItem = memo(
     ({ message, streaming, bulkMode, checked, onToggleSelect, onDelete, disabled }) => {
         const isUser = message.role === 'user';
-        const { openFile } = useRunner() || {};
+        const { openFile } = useRunner() ?? {};
         // 加载中 / 批量模式下隐藏单条删除入口
         const showDelete = !disabled && !bulkMode;
 
         if (isUser) {
-            const atts = message.attachments || [];
+            const atts = message.attachments ?? [];
             return (
                 <div className="group flex flex-col items-end">
                     <div
@@ -131,7 +131,7 @@ const MessageItem = memo(
             );
         }
 
-        const { reasoning, answer } = splitThinking(message.content || '');
+        const { reasoning, answer } = splitThinking(message.content ?? '');
         const thinking = streaming && reasoning && !answer;
         const isEmpty = !reasoning && !answer;
 

@@ -1,6 +1,7 @@
 import { CopyOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { Button, Space, Tooltip } from 'antd';
 import 'highlight.js/styles/github.css';
+import { clamp } from 'lodash';
 import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
@@ -48,8 +49,8 @@ const DEFAULT_NAMES = {
 
 // 代码块高度: 按行数估算, 超高内部滚动
 const blockHeight = (text, max = 420) => {
-    const lines = (text.match(/\n/g)?.length || 0) + 1;
-    return Math.min(Math.max(lines * 20 + 16, 56), max);
+    const lines = (text.match(/\n/g)?.length ?? 0) + 1;
+    return clamp(lines * 20 + 16, 56, max);
 };
 
 // 从 hast 节点树提取纯文本 (rehype-highlight 后 children 是高亮 span 树, 不能直接 String)
@@ -60,15 +61,15 @@ const nodeText = node => {
     if (node.type === 'text') {
         return node.value;
     }
-    return (node.children || []).map(nodeText).join('');
+    return (node.children ?? []).map(nodeText).join('');
 };
 
 const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
     const { openRunner } = useRunner();
     const blocks = useContext(BlocksContext);
-    const lang = /language-([\w-]+)/.exec(className || '')?.[1] || '';
+    const lang = /language-([\w-]+)/.exec(className ?? '')?.[1] ?? '';
     // "```语言:文件名" 的文件名标注, 未标注时为 null (回退 DEFAULT_NAMES)
-    const fileName = /language-[\w-]+:([^\s`]+)/.exec(className || '')?.[1] || null;
+    const fileName = /language-[\w-]+:([^\s`]+)/.exec(className ?? '')?.[1] ?? null;
     const code = (node ? nodeText(node) : String(children ?? '')).trimEnd(); // fenced code 尾部换行会让 Monaco 多渲染一个空行
     const codeRef = useRef(code);
     codeRef.current = code; // 流式输出时内容持续变化, 供运行按钮读取最新值
@@ -100,7 +101,7 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
         }
         const used = new Set();
         const files = blocks.collect().map(item => {
-            let name = item.name || DEFAULT_NAMES[item.lang] || `${item.lang}.txt`;
+            let name = item.name ?? DEFAULT_NAMES[item.lang] ?? `${item.lang}.txt`;
             if (used.has(name)) {
                 const dot = name.lastIndexOf('.');
                 name = `${name.slice(0, dot)}-${used.size}${name.slice(dot)}`;
@@ -152,7 +153,7 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                 </pre>
             ) : (
                 <div style={{ height: blockHeight(code) }}>
-                    <MonacoEditor value={code} language={MONACO_LANG[lang] || 'plaintext'} readOnly />
+                    <MonacoEditor value={code} language={MONACO_LANG[lang] ?? 'plaintext'} readOnly />
                 </div>
             )}
         </div>

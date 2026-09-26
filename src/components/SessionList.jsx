@@ -20,7 +20,7 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
 
     const startEdit = item => {
         setEditingId(item.id);
-        setDraft(item.title || '');
+        setDraft(item.title ?? '');
         setError('');
     };
 
