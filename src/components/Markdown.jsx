@@ -10,7 +10,7 @@ import { useRunner } from '../runnerContext';
 // css/js 片段拼出预览是空白页，无需运行按钮（见 CodeRunner.buildHtml）
 const RUNNABLE_LANGS = ['html', 'xml', 'svg'];
 
-function CodeBlock({ className, children, node, ...rest }) {
+function CodeBlock({ className, children, node, streaming, ...rest }) {
     const [copied, setCopied] = useState(false);
     const preRef = useRef(null);
     const { openRunner } = useRunner();
@@ -46,23 +46,26 @@ function CodeBlock({ className, children, node, ...rest }) {
         <div className="mb-3 overflow-hidden rounded-[10px] border border-[#e5e6eb] bg-[#fbfbfc]">
             <div className="flex items-center justify-between bg-[#f2f3f5] px-3 py-1.5 text-xs text-[#646a73]">
                 <span className="uppercase tracking-[0.5px]">{lang || 'text'}</span>
-                <div className="flex items-center gap-1">
-                    {runnable && (
+                {/* 流式生成中内容还在变化，隐藏操作按钮 */}
+                {!streaming && (
+                    <div className="flex items-center gap-1">
+                        {runnable && (
+                            <button
+                                className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
+                                onClick={() => openRunner(codeText(), lang)}
+                                title="运行预览"
+                            >
+                                <PlayCircleOutlined /> 运行
+                            </button>
+                        )}
                         <button
                             className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
-                            onClick={() => openRunner(codeText(), lang)}
-                            title="运行预览"
+                            onClick={copy}
                         >
-                            <PlayCircleOutlined /> 运行
+                            {copied ? '已复制' : '复制'}
                         </button>
-                    )}
-                    <button
-                        className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
-                        onClick={copy}
-                    >
-                        {copied ? '已复制' : '复制'}
-                    </button>
-                </div>
+                    </div>
+                )}
             </div>
             <pre ref={preRef} className={className}>
                 <code className={className} {...rest}>
@@ -73,7 +76,7 @@ function CodeBlock({ className, children, node, ...rest }) {
     );
 }
 
-export default function Markdown({ children }) {
+export default function Markdown({ children, streaming }) {
     return (
         <div className="markdown-body">
             <ReactMarkdown
@@ -83,7 +86,7 @@ export default function Markdown({ children }) {
                     // react-markdown 默认渲染 <pre><code>，而 CodeBlock 非行内分支自带 pre，
                     // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套（双 pre 样式叠加）
                     pre: ({ children }) => <>{children}</>,
-                    code: CodeBlock
+                    code: props => <CodeBlock {...props} streaming={streaming} />
                 }}
             >
                 {children}

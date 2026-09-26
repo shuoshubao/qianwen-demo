@@ -17,12 +17,20 @@ export default function App() {
     const [runner, setRunner] = useState(null); // { code, lang } | null
     const abortRef = useRef(null);
     const scrollRef = useRef(null);
+    const stickToBottomRef = useRef(true); // 用户是否停留在底部，上滚看历史时暂停自动滚动
 
     const currentModel = useMemo(() => MODELS.find(m => m.id === model), [model]);
 
+    // 滚到距底部 40px 以内视为「贴底」，恢复自动滚动（阈值容差避免浮点误差）
+    const handleScroll = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+        stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    };
+
     useEffect(() => {
         const el = scrollRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
+        if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
     }, [messages]);
 
     const handleSend = async (text, images) => {
@@ -43,6 +51,7 @@ export default function App() {
         const history = [...messages, userMsg];
         setMessages([...history, assistantMsg]);
         setLoading(true);
+        stickToBottomRef.current = true; // 发送新消息强制滚到底
 
         // 组装发给 Ollama 的消息（携带图片 base64）
         const payload = history.map(m => {
@@ -115,7 +124,7 @@ export default function App() {
                         </button>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto py-6" ref={scrollRef}>
+                    <main className="flex-1 overflow-y-auto py-6" ref={scrollRef} onScroll={handleScroll}>
                         <div className="mx-auto w-full max-w-[860px] px-5">
                             {empty ? (
                                 <div className="mt-[12vh] text-center text-[#1f2329]">

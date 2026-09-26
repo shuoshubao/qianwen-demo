@@ -84,7 +84,7 @@ export default function MessageItem({ message, streaming }) {
                             <i className="h-1.5 w-1.5 rounded-full bg-[#b5bcc7] [animation:blink_1.2s_infinite_ease-in-out] [animation-delay:0.4s]"></i>
                         </span>
                     ) : (
-                        <Markdown>{answer || (reasoning ? '' : message.content)}</Markdown>
+                        <Markdown streaming={streaming}>{answer || (reasoning ? '' : message.content)}</Markdown>
                     )}
                 </div>
                 {!streaming && !isEmpty && <MessageMeta time={message.time} text={answer || message.content} align="left" />}
