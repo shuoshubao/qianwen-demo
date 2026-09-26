@@ -102,10 +102,7 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                                     okButtonProps={{ danger: true }}
                                     onConfirm={() => onDelete(item.id)}
                                 >
-                                    <button
-                                        className="cursor-pointer rounded p-1 text-xs text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#f53f3f]"
-                                        title="删除"
-                                    >
+                                    <button className="cursor-pointer rounded p-1 text-xs text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#f53f3f]" title="删除">
                                         <DeleteOutlined />
                                     </button>
                                 </Popconfirm>

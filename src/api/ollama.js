@@ -56,7 +56,7 @@ export const streamChat = async ({ model, messages, signal, onToken }) => {
             }
         }
     }
-}
+};
 
 /** 把 File 读成 base64 (不含 data: 前缀), 供 Ollama 多模态使用 */
 export const fileToBase64 = file => {

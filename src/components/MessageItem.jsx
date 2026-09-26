@@ -59,7 +59,7 @@ const MessageItem = ({ message, streaming }) => {
                             ))}
                         </div>
                     )}
-                    <div className="rounded-[14px] rounded-tr-[4px] bg-gradient-to-br from-[#3370ff] to-[#5b8cff] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-white">
+                    <div className="rounded-[14px] bg-gradient-to-br from-[#3370ff] to-[#5b8cff] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-white">
                         {message.content}
                     </div>
                     <MessageMeta time={message.time} text={message.content} align="right" />
@@ -76,7 +76,7 @@ const MessageItem = ({ message, streaming }) => {
         <div className="group mb-6 flex flex-col">
             <div className="flex w-full flex-col gap-2">
                 <ReasoningPanel reasoning={reasoning} thinking={thinking} />
-                <div className="w-full rounded-[14px] rounded-tl-[4px] bg-white px-4 py-3 text-[15px] leading-[1.75] text-[#1f2329] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                <div className="w-full rounded-[14px] bg-white px-4 py-3 text-[15px] leading-[1.75] text-[#1f2329] shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
                     {isEmpty && streaming ? (
                         <span className="inline-flex h-5 items-center gap-1">
                             <i className="h-1.5 w-1.5 rounded-full bg-[#b5bcc7] [animation:blink_1.2s_infinite_ease-in-out]"></i>

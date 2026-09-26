@@ -217,7 +217,7 @@ const App = () => {
     const activeTitle = sessions.find(item => item.id === activeId)?.title;
 
     return (
-        <RunnerContext.Provider value={{ openRunner: (code, lang) => setRunner({ code, lang }) }}>
+        <RunnerContext.Provider value={{ openRunner: files => setRunner({ files }) }}>
             <div className="flex h-screen bg-[#edf0f5]">
                 <SessionList
                     sessions={sessions}
@@ -272,9 +272,7 @@ const App = () => {
                                     </p>
                                 </div>
                             ) : (
-                                messages.map((item, index) => (
-                                    <MessageItem key={item.id} message={item} streaming={loading && index === messages.length - 1} />
-                                ))
+                                messages.map((item, index) => <MessageItem key={item.id} message={item} streaming={loading && index === messages.length - 1} />)
                             )}
                         </div>
                     </main>

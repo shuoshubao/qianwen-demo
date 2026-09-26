@@ -16,12 +16,19 @@ const getLoader = () => {
         });
     }
     return loaderPromise;
-}
+};
 
 const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
+    // 编辑器是异步加载的, 创建完成前 props 可能已更新, 用 ref 始终持有最新值
+    const valueRef = useRef(value);
+    const langRef = useRef(language);
+    const onChangeRef = useRef(onChange);
+    valueRef.current = value;
+    langRef.current = language;
+    onChangeRef.current = onChange;
 
     // 供父组件在切换 tab 时直接读取编辑器当前内容
     useImperativeHandle(ref, () => ({
@@ -36,8 +43,8 @@ const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
                 if (disposed || !containerRef.current) return;
                 monacoRef.current = monaco;
                 const editor = monaco.editor.create(containerRef.current, {
-                    value,
-                    language,
+                    value: valueRef.current,
+                    language: langRef.current,
                     theme: 'vs',
                     minimap: { enabled: false },
                     fontSize: 13,
@@ -47,7 +54,7 @@ const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
                     automaticLayout: true
                 });
                 editor.onDidChangeModelContent(() => {
-                    onChange?.(editor.getValue());
+                    onChangeRef.current?.(editor.getValue());
                 });
                 editorRef.current = editor;
             });
