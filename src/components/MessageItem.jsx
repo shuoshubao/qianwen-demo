@@ -1,6 +1,6 @@
 import { CheckOutlined, CopyOutlined } from '@ant-design/icons';
 import { cn } from 'cn';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { splitThinking } from '../api/ollama';
 import Markdown from './Markdown';
 import ReasoningPanel from './ReasoningPanel';
@@ -34,7 +34,7 @@ const MessageMeta = ({ time, text, align }) => {
         >
             <span className="leading-none">{formatTime(time)}</span>
             <button
-                className="inline-flex cursor-pointer items-center gap-1 rounded p-0.5 text-xs leading-none text-[#a8adb5] hover:bg-[#f2f3f5] hover:text-[#3370ff]"
+                className="inline-flex cursor-pointer items-center gap-1 rounded p-0.5 text-xs leading-none text-[#a8adb5] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
                 onClick={copy}
                 title="复制"
             >
@@ -45,7 +45,8 @@ const MessageMeta = ({ time, text, align }) => {
     );
 };
 
-const MessageItem = ({ message, streaming }) => {
+// memo: 流式更新时只有最后一条消息的对象引用会变, 历史消息跳过重渲染
+const MessageItem = memo(({ message, streaming }) => {
     const isUser = message.role === 'user';
 
     if (isUser) {
@@ -59,7 +60,7 @@ const MessageItem = ({ message, streaming }) => {
                             ))}
                         </div>
                     )}
-                    <div className="rounded-[14px] bg-gradient-to-br from-[#3370ff] to-[#5b8cff] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-white">
+                    <div className="rounded-[14px] bg-gradient-to-br from-[#722ed1] to-[#9254de] px-4 py-3 text-[15px] leading-[1.75] break-words whitespace-pre-wrap text-white">
                         {message.content}
                     </div>
                     <MessageMeta time={message.time} text={message.content} align="right" />
@@ -91,6 +92,6 @@ const MessageItem = ({ message, streaming }) => {
             </div>
         </div>
     );
-};
+});
 
 export default MessageItem;

@@ -127,10 +127,14 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                     </div>
                 )}
             </div>
-            {/* 只读 Monaco 渲染, 行号 + 语法高亮 */}
-            <div style={{ height: blockHeight(code) }}>
-                <MonacoEditor value={code} language={MONACO_LANG[lang] || 'plaintext'} readOnly />
-            </div>
+            {/* 流式生成中内容逐 token 变化, 用纯文本避免 Monaco 反复销毁重建造成闪烁; 结束后再一次性挂载 */}
+            {streaming ? (
+                <pre className="max-h-[420px] overflow-auto p-3 font-mono text-[13px] leading-5 text-[#1f2329]">{code}</pre>
+            ) : (
+                <div style={{ height: blockHeight(code) }}>
+                    <MonacoEditor value={code} language={MONACO_LANG[lang] || 'plaintext'} readOnly />
+                </div>
+            )}
         </div>
     );
 };

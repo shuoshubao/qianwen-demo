@@ -52,7 +52,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     const canSend = (text.trim() || images.length > 0) && !loading;
 
     return (
-        <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#3370ff]">
+        <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#722ed1]">
             {images.length > 0 && (
                 <div className="flex flex-wrap gap-2 px-1.5 pt-1.5 pb-2.5">
                     {images.map((item, index) => (
@@ -71,7 +71,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
             <div className="flex items-end gap-2">
                 {allowImage && (
                     <button
-                        className="cursor-pointer rounded-lg p-1.5 text-xl leading-none text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#3370ff]"
+                        className="cursor-pointer rounded-lg p-1.5 text-xl leading-none text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
                         title="上传图片"
                         onClick={() => fileRef.current?.click()}
                     >
@@ -100,7 +100,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                     </button>
                 ) : (
                     <button
-                        className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#3370ff] to-[#5b8cff] text-base text-white transition-opacity disabled:cursor-not-allowed disabled:bg-[#d0d3d9]"
+                        className="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-[#722ed1] to-[#9254de] text-base text-white transition-opacity disabled:cursor-not-allowed disabled:bg-[#d0d3d9]"
                         disabled={!canSend}
                         onClick={submit}
                         title="发送"
