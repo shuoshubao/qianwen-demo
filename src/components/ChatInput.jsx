@@ -1,12 +1,16 @@
 import { ArrowUpOutlined, CloseOutlined, PaperClipOutlined } from '@ant-design/icons';
-import { message } from 'antd';
+import { message, Select, Space, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
+import { MODELS } from '../api/ollama';
 import { formatSize, getFileMeta } from '../utils/fileMeta';
 
 // 文本文件大小上限, 超出提示跳过 (避免撑爆上下文)
 const FILE_LIMIT = 512 * 1024;
 
-const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
+// 不支持图片的模型, 文件选择器只给文本/代码类 (accept 只是建议, pickFiles 里仍有防御性拦截)
+const TEXT_ACCEPT = 'text/*,application/json,application/xml,application/javascript,.ts,.tsx,.jsx,.sh';
+
+const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }) => {
     const [text, setText] = useState('');
     // 按选择顺序统一存放: { kind: 'image', url, base64 } | { kind: 'file', name, size, content }
     const [attachments, setAttachments] = useState([]);
@@ -24,6 +28,11 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
         const next = [];
         for (const item of picked) {
             if (item.type.startsWith('image/')) {
+                if (!allowImage) {
+                    // 非多模态模型无法消费图片, 直接拦截
+                    message.warning('当前模型不支持图片, 仅支持文本文件');
+                    continue;
+                }
                 const url = URL.createObjectURL(item);
                 const base64 = await new Promise(resolve => {
                     const r = new FileReader();
@@ -75,7 +84,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     return (
         <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#722ed1]">
             {attachments.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 px-1.5 pt-1.5 pb-2.5">
+                <Space wrap size={8} className="px-1.5 pt-1.5 pb-2.5">
                     {attachments.map((item, index) => {
                         if (item.kind === 'image') {
                             return (
@@ -115,7 +124,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                             </div>
                         );
                     })}
-                </div>
+                </Space>
             )}
             <textarea
                 ref={taRef}
@@ -130,15 +139,25 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                 onKeyDown={onKeyDown}
             />
             <div className="flex items-center justify-between pt-1.5">
-                {allowImage && (
-                    <button
-                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-lg leading-none text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#722ed1]"
-                        title="上传文件或图片"
-                        onClick={() => fileRef.current?.click()}
-                    >
-                        <PaperClipOutlined />
-                    </button>
-                )}
+                <Space size={8} align="center">
+                    <Tooltip title={allowImage ? '上传文件或图片' : '上传文件'}>
+                        <button
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-lg leading-none text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                            onClick={() => fileRef.current?.click()}
+                        >
+                            <PaperClipOutlined />
+                        </button>
+                    </Tooltip>
+                    <Select
+                        value={model}
+                        onChange={onModelChange}
+                        variant="filled"
+                        size="small"
+                        style={{ width: 150 }}
+                        disabled={loading}
+                        options={MODELS.map(item => ({ value: item.id, label: item.name }))}
+                    />
+                </Space>
                 {loading ? (
                     <button
                         className="ml-auto flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#1f2329] text-base text-white"
@@ -158,7 +177,7 @@ const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
                     </button>
                 )}
             </div>
-            <input ref={fileRef} type="file" multiple hidden onChange={pickFiles} />
+            <input ref={fileRef} type="file" multiple hidden accept={allowImage ? undefined : TEXT_ACCEPT} onChange={pickFiles} />
         </div>
     );
 };

@@ -1,4 +1,5 @@
 import { PlayCircleOutlined } from '@ant-design/icons';
+import { Space } from 'antd';
 import 'highlight.js/styles/github.css';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -128,7 +129,7 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                 </span>
                 {/* 流式生成中内容还在变化, 隐藏操作按钮 */}
                 {!streaming && (
-                    <div className="flex items-center gap-1">
+                    <Space size={4} align="center">
                         {runnable && (
                             <button
                                 className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
@@ -144,7 +145,7 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                         >
                             {copied ? '已复制' : '复制'}
                         </button>
-                    </div>
+                    </Space>
                 )}
             </div>
             {/* 流式生成中内容逐 token 变化, 用 rehype-highlight 高亮的 pre 渲染; 结束后再挂载 Monaco */}

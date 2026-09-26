@@ -1,4 +1,4 @@
-import { Button, Modal, Popconfirm, Table } from 'antd';
+import { Button, Modal, Popconfirm, Space, Table } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { getSessionStats } from '../db';
 
@@ -101,7 +101,7 @@ const StorageModal = ({ open, onClose, sessions, onDeleteMany }) => {
                     <span className="text-[13px] text-[#8a9099]">
                         共 {rows.length} 个会话, 总计占用 {formatSize(totalSize)}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <Space size={8} align="center">
                         <Popconfirm
                             title={`删除选中的 ${selectedIds.length} 个会话?`}
                             description="会话内容将一并清除, 不可恢复"
@@ -116,7 +116,7 @@ const StorageModal = ({ open, onClose, sessions, onDeleteMany }) => {
                             </Button>
                         </Popconfirm>
                         <Button onClick={onClose}>关闭</Button>
-                    </div>
+                    </Space>
                 </div>
             }
         >

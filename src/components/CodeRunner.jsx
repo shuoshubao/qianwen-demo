@@ -1,5 +1,5 @@
 import { CloseOutlined, CodeOutlined, DownloadOutlined, EyeOutlined, FileOutlined, FolderOutlined } from '@ant-design/icons';
-import { Tree } from 'antd';
+import { Space, Tree } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MonacoEditor from './MonacoEditor';
 
@@ -245,11 +245,11 @@ const CodeRunner = ({ runner, onClose }) => {
                 title="拖拽调整窗口宽度"
             />
             <header className="flex flex-shrink-0 items-center gap-2 px-4 py-3">
-                <div className="flex items-center gap-2 text-[15px] font-semibold text-[#1f2329]">
+                <Space size={8} align="center" className="text-[15px] font-semibold text-[#1f2329]">
                     <span className="h-2 w-2 rounded-full bg-green-500" />
                     代码运行
                     <span className="rounded-[10px] bg-[rgba(114,46,209,0.08)] px-2 py-0.5 text-xs font-medium text-[#722ed1]">{files.length} 个文件</span>
-                </div>
+                </Space>
                 <button
                     className="ml-auto cursor-pointer rounded-lg p-1.5 text-base leading-none text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#1f2329]"
                     onClick={onClose}

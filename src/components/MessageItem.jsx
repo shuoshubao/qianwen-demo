@@ -1,5 +1,5 @@
 import { CheckOutlined, CopyOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import { Checkbox, Image } from 'antd';
+import { Checkbox, Image, Space } from 'antd';
 import { cn } from 'cn';
 import { isEqual, pick } from 'lodash';
 import { memo, useState } from 'react';
@@ -34,9 +34,11 @@ const MessageMeta = ({ time, text, align, showTime = true, onDelete }) => {
         }
     };
     return (
-        <div
+        <Space
+            size={10}
+            align="center"
             className={cn(
-                'flex items-center gap-2.5 text-xs text-[#a8adb5] opacity-0 transition-opacity group-hover:opacity-100',
+                'text-xs text-[#a8adb5] opacity-0 transition-opacity group-hover:opacity-100',
                 align === 'right' ? 'justify-end' : 'justify-start'
             )}
         >
@@ -59,7 +61,7 @@ const MessageMeta = ({ time, text, align, showTime = true, onDelete }) => {
                     <span>删除</span>
                 </button>
             )}
-        </div>
+        </Space>
     );
 };
 
@@ -88,7 +90,7 @@ const MessageItem = memo(
                         <div className="flex min-w-0 max-w-[85%] flex-col items-end gap-2">
                             {atts.length > 0 && (
                                 <Image.PreviewGroup>
-                                    <div className="flex flex-wrap items-center justify-end gap-2">
+                                    <Space wrap size={8} align="center" className="justify-end">
                                         {atts.map((item, index) => {
                                             if (item.kind === 'image') {
                                                 return (
@@ -119,7 +121,7 @@ const MessageItem = memo(
                                                 </div>
                                             );
                                         })}
-                                    </div>
+                                    </Space>
                                 </Image.PreviewGroup>
                             )}
                             {message.content && (

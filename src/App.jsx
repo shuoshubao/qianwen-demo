@@ -1,5 +1,5 @@
 import { DatabaseOutlined } from '@ant-design/icons';
-import { Modal, Select, Typography } from 'antd';
+import { Modal, Space, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import ChatInput from './components/ChatInput';
@@ -256,6 +256,15 @@ const App = () => {
         abortRef.current?.abort();
     };
 
+    // 模型与会话绑定: 切换即落库, 切回该会话时按存储回显, 不随全局默认值漂移
+    const handleModelChange = value => {
+        setModel(value);
+        if (activeId) {
+            updateSession(activeId, { model: value });
+            setSessions(prev => prev.map(item => (item.id === activeId ? { ...item, model: value } : item)));
+        }
+    };
+
     // useCallback: 稳定引用, 否则每次渲染新建函数会让 MessageItem 的 memo 失效
     const enterBulkMode = useCallback(
         id => {
@@ -380,7 +389,7 @@ const App = () => {
                                 </Typography.Title>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <Space size={8} align="center">
                             {bulkMode ? (
                                 <button
                                     className="cursor-pointer rounded-lg px-3 py-1.5 text-[14px] text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#1f2329]"
@@ -390,14 +399,6 @@ const App = () => {
                                 </button>
                             ) : (
                                 <>
-                                    <Select
-                                        value={model}
-                                        onChange={setModel}
-                                        variant="filled"
-                                        style={{ minWidth: 170 }}
-                                        disabled={loading}
-                                        options={MODELS.map(item => ({ value: item.id, label: item.name }))}
-                                    />
                                     <button
                                         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[15px] text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
                                         onClick={() => setStorageOpen(true)}
@@ -407,7 +408,7 @@ const App = () => {
                                     </button>
                                 </>
                             )}
-                        </div>
+                        </Space>
                     </header>
 
                     <main className="flex-1 overflow-y-auto py-6" ref={scrollRef} onScroll={handleScroll}>
@@ -440,7 +441,14 @@ const App = () => {
 
                     <footer className="pt-2 pb-[18px]">
                         <div className={`mx-auto w-full max-w-[860px] px-5 ${bulkMode ? 'pointer-events-none opacity-40' : ''}`}>
-                            <ChatInput onSend={handleSend} onStop={handleStop} loading={loading} allowImage={currentModel.vision} />
+                            <ChatInput
+                                onSend={handleSend}
+                                onStop={handleStop}
+                                loading={loading}
+                                allowImage={currentModel.vision}
+                                model={model}
+                                onModelChange={handleModelChange}
+                            />
                         </div>
                     </footer>
                     {bulkMode && (
