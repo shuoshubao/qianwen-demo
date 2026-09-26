@@ -1,5 +1,5 @@
-import { CloseOutlined, CodeOutlined, DownloadOutlined, EyeOutlined, FileOutlined, FolderOutlined } from '@ant-design/icons';
-import { Button, Space, Tree } from 'antd';
+import { CloseOutlined, CodeOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Segmented, Space, Tooltip } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MonacoEditor from './MonacoEditor';
 
@@ -118,29 +118,6 @@ ${ERROR_GUARD}
     return html;
 };
 
-// 把文件列表按 name 的 / 分段构建成 antd Tree 数据, 同目录归并到同一文件夹节点
-const buildTreeData = files => {
-    const root = [];
-    for (const item of files) {
-        const parts = item.name.split('/');
-        let level = root;
-        let keyPath = '';
-        parts.forEach((part, index) => {
-            keyPath = keyPath ? `${keyPath}/${part}` : part;
-            const isFile = index === parts.length - 1;
-            let node = level.find(item1 => item1.key === keyPath);
-            if (!node) {
-                node = isFile
-                    ? { key: keyPath, title: part, isLeaf: true, icon: <FileOutlined /> }
-                    : { key: keyPath, title: part, icon: <FolderOutlined />, children: [] };
-                level.push(node);
-            }
-            level = node.children || (node.children = []);
-        });
-    }
-    return root;
-};
-
 // 预览窗口宽度限制 (拖拽调整, 记忆上次宽度)
 const RUNNER_MIN = 320;
 const RUNNER_DEFAULT = 480;
@@ -227,9 +204,6 @@ const CodeRunner = ({ runner, onClose }) => {
 
     const html = useMemo(() => (files.length ? buildHtml(files) : ''), [files]);
 
-    const treeData = useMemo(() => buildTreeData(files), [files]);
-    // 是否存在子目录: 平铺文件时隐藏叶节点占位, 去掉多余的左侧缩进
-    const hasFolders = useMemo(() => files.some(item => item.name.includes('/')), [files]);
     const activeName = files[active]?.name;
 
     if (!runner) {
@@ -250,7 +224,9 @@ const CodeRunner = ({ runner, onClose }) => {
                 <Space size={8} align="center" className="text-[15px] font-semibold text-[#1f2329]">
                     <span className="h-2 w-2 rounded-full bg-green-500" />
                     代码运行
-                    <span className="rounded-[10px] bg-[rgba(114,46,209,0.08)] px-2 py-0.5 text-xs font-medium text-[#722ed1]">{files.length} 个文件</span>
+                    {files.length > 1 && (
+                        <span className="rounded-[10px] bg-[rgba(114,46,209,0.08)] px-2 py-0.5 text-xs font-medium text-[#722ed1]">{files.length} 个文件</span>
+                    )}
                 </Space>
                 <Button
                     type="text"
@@ -261,80 +237,60 @@ const CodeRunner = ({ runner, onClose }) => {
                 />
             </header>
 
-            <div className="flex min-h-0 flex-1">
-                {/* 文件树 (仅源码模式展示, 多文件项目时, 文件夹可折叠) */}
-                {tab === 'source' && files.length > 1 && (
-                    <div className="w-[190px] flex-shrink-0 overflow-y-auto border-r border-[#eceef1] p-3">
-                        <div className="pb-2 text-xs font-semibold text-[#8a9099]">文件</div>
-                        <Tree
-                            treeData={treeData}
-                            selectedKeys={activeName ? [activeName] : []}
-                            className={hasFolders ? '' : '[&_.ant-tree-switcher]:hidden'}
-                            onSelect={keys => {
-                                if (keys.length) {
-                                    const index = files.findIndex(item => item.name === keys[0]);
-                                    if (index >= 0) {
-                                        switchFile(index);
-                                    }
-                                }
-                            }}
-                            blockNode
+            <div className="flex min-w-0 flex-1 flex-col">
+                <div className="flex flex-shrink-0 items-center justify-between border-b border-[#eceef1] px-4 py-2">
+                    <div className="flex-shrink-0">
+                        <Segmented
+                            value={tab}
+                            onChange={value => (value === 'preview' ? showPreview() : setTab(value))}
+                            options={[
+                                { value: 'preview', label: '预览', icon: <EyeOutlined /> },
+                                { value: 'source', label: '源码', icon: <CodeOutlined /> }
+                            ]}
                         />
                     </div>
-                )}
-
-                <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex flex-shrink-0 items-center justify-between border-b border-[#eceef1] px-4 py-2">
-                        <div className="flex gap-1 rounded-[10px] bg-[#f2f3f5] p-[3px]">
-                            <Button
-                                type="text"
-                                icon={<EyeOutlined />}
-                                onClick={showPreview}
-                                className={`h-[28px]! rounded-lg! px-3.5! text-[13px]! text-[#646a73]! ${
-                                    tab === 'preview' ? 'bg-white! font-semibold! text-[#722ed1]! shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''
-                                }`}
-                            >
-                                预览
-                            </Button>
-                            <Button
-                                type="text"
-                                icon={<CodeOutlined />}
-                                onClick={() => setTab('source')}
-                                className={`h-[28px]! rounded-lg! px-3.5! text-[13px]! text-[#646a73]! ${
-                                    tab === 'source' ? 'bg-white! font-semibold! text-[#722ed1]! shadow-[0_1px_4px_rgba(15,20,30,0.08)]' : ''
-                                }`}
-                            >
-                                源码
-                            </Button>
-                        </div>
+                    <Tooltip title="下载">
                         <Button
                             type="text"
                             icon={<DownloadOutlined />}
                             onClick={download}
-                            title="下载"
-                            className="text-[13px]! text-[#646a73]! hover:bg-transparent! hover:text-[#722ed1]!"
-                        >
-                            下载
-                        </Button>
-                    </div>
+                            className="text-[#646a73]! hover:bg-transparent! hover:text-[#722ed1]!"
+                        />
+                    </Tooltip>
+                </div>
 
-                    <div className="min-h-0 flex-1">
-                        {tab === 'preview' ? (
-                            <div className="h-full">
-                                {/* key 绑定 html: 源码一变, 预览 iframe 强制重挂载, 切换到预览即看到最新效果 */}
-                                <iframe key={html} srcDoc={html} sandbox="allow-scripts" title="代码预览" className="h-full w-full border-0 bg-white" />
-                            </div>
-                        ) : (
-                            <div className="h-full p-2">
-                                <MonacoEditor
-                                    ref={editorApiRef}
-                                    value={activeFile?.code ?? ''}
-                                    language={lang}
-                                    onChange={code => setFiles(prev => prev.map((f, i) => (i === active ? { ...f, code } : f)))}
-                                />
-                            </div>
-                        )}
+                {/* 多文件时在源码模式下横向切换文件 */}
+                {tab === 'source' && files.length > 1 && (
+                    <div className="flex-shrink-0 overflow-x-auto border-b border-[#eceef1] px-4 py-2">
+                        <Segmented
+                            value={activeName}
+                            onChange={name => {
+                                const index = files.findIndex(item => item.name === name);
+                                if (index >= 0) {
+                                    switchFile(index);
+                                }
+                            }}
+                            options={files.map(f => ({ value: f.name, label: f.name }))}
+                        />
                     </div>
+                )}
+
+                <div className="min-h-0 flex-1">
+                    {tab === 'preview' ? (
+                        <div className="h-full">
+                            {/* key 绑定 html: 源码一变, 预览 iframe 强制重挂载, 切换到预览即看到最新效果 */}
+                            <iframe key={html} srcDoc={html} sandbox="allow-scripts" title="代码预览" className="h-full w-full border-0 bg-white" />
+                        </div>
+                    ) : (
+                        <div className="h-full p-2">
+                            <MonacoEditor
+                                ref={editorApiRef}
+                                value={activeFile?.code ?? ''}
+                                language={lang}
+                                onChange={code => setFiles(prev => prev.map((f, i) => (i === active ? { ...f, code } : f)))}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </aside>

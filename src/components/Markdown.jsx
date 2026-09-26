@@ -1,5 +1,5 @@
-import { PlayCircleOutlined } from '@ant-design/icons';
-import { Button, Space, Typography } from 'antd';
+import { CopyOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Button, Space, Tooltip } from 'antd';
 import 'highlight.js/styles/github.css';
 import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -132,9 +132,14 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
                                 运行
                             </Button>
                         )}
-                        <Typography.Text copyable={{ text: code }} className="rounded px-1.5 py-0.5 text-xs text-[#722ed1]">
-                            复制
-                        </Typography.Text>
+                        <Tooltip title="复制">
+                            <Button
+                                type="text"
+                                icon={<CopyOutlined />}
+                                onClick={() => navigator.clipboard.writeText(code)}
+                                className="text-[#722ed1]! hover:bg-[rgba(114,46,209,0.1)]!"
+                            />
+                        </Tooltip>
                     </Space>
                 )}
             </div>

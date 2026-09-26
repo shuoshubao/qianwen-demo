@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, MoreOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Input, Modal } from 'antd';
+import { Button, Dropdown, Empty, Input, Modal } from 'antd';
 import { cn } from 'cn';
 import { useState } from 'react';
 
@@ -112,7 +112,7 @@ const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, 
                         </Dropdown>
                     </div>
                 ))}
-                {sessions.length === 0 && <div className="px-3 py-6 text-center text-xs text-[#a8adb5]">暂无历史会话</div>}
+                {sessions.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无历史会话" className="py-6" />}
             </div>
 
             <Modal title="重命名会话" open={!!editingId} onOk={commitEdit} onCancel={() => setEditingId(null)} okText="确定" cancelText="取消" width={360}>
