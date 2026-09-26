@@ -1,9 +1,10 @@
 // Ollama 本地服务客户端, 默认地址 http://localhost:11434
 const OLLAMA_BASE = 'http://localhost:11434';
 
+// numCtx: 上下文窗口大小, 不传时 Ollama 默认只有 4096, 长对话/大文件会被截断
 export const MODELS = [
-    { id: 'qwen2.5vl:7b', name: 'Qwen2.5-VL 7B', vision: true },
-    { id: 'deepseek-r1:7b', name: 'DeepSeek-R1 7B', vision: false }
+    { id: 'qwen2.5vl:7b', name: 'Qwen2.5-VL 7B', vision: true, numCtx: 16384 },
+    { id: 'deepseek-r1:7b', name: 'DeepSeek-R1 7B', vision: false, numCtx: 16384 }
 ];
 
 /**
@@ -15,10 +16,15 @@ export const MODELS = [
  * @param {(chunk: string) => void} opts.onToken 每次收到增量文本时回调
  */
 export const streamChat = async ({ model, messages, signal, onToken }) => {
+    const numCtx = MODELS.find(item => item.id === model)?.numCtx;
+    const body = { model, messages, stream: true };
+    if (numCtx) {
+        body.options = { num_ctx: numCtx };
+    }
     const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages, stream: true }),
+        body: JSON.stringify(body),
         signal
     });
 

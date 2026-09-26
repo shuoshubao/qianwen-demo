@@ -1,5 +1,5 @@
 import { DatabaseOutlined } from '@ant-design/icons';
-import { Select, Typography } from 'antd';
+import { Modal, Select, Typography } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import ChatInput from './components/ChatInput';
@@ -8,7 +8,7 @@ import FilePreview from './components/FilePreview';
 import MessageItem from './components/MessageItem';
 import SessionList from './components/SessionList';
 import StorageModal from './components/StorageModal';
-import { addMessage, createSession, deleteSession, getSession, listMessages, listSessions, updateSession } from './db';
+import { addMessage, createSession, deleteMessages, deleteSession, getSession, listMessages, listSessions, updateSession } from './db';
 import { RunnerContext } from './runnerContext';
 import { extOf } from './utils/fileMeta';
 
@@ -30,6 +30,8 @@ const App = () => {
     const [runner, setRunner] = useState(null); // { code, lang } | null
     const [previewFile, setPreviewFile] = useState(null); // { name, size, content } | null
     const [storageOpen, setStorageOpen] = useState(false);
+    const [bulkMode, setBulkMode] = useState(false); // 批量删除模式
+    const [selected, setSelected] = useState(() => new Set()); // 选中的消息 id 集合
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === '1');
     const abortRef = useRef(null);
     const scrollRef = useRef(null);
@@ -254,6 +256,49 @@ const App = () => {
         abortRef.current?.abort();
     };
 
+    const enterBulkMode = () => {
+        if (loading) {
+            return;
+        }
+        setBulkMode(true);
+    };
+
+    const exitBulkMode = () => {
+        setBulkMode(false);
+        setSelected(new Set());
+    };
+
+    const toggleSelect = id => {
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const confirmDeleteSelected = () => {
+        if (selected.size === 0) {
+            return;
+        }
+        Modal.confirm({
+            title: selected.size === 1 ? '是否删除该条消息？' : `是否删除选中的 ${selected.size} 条消息？`,
+            content: '删除后，聊天记录不可恢复，对话内的文件也将被彻底删除',
+            okText: '删除',
+            okButtonProps: { danger: true },
+            cancelText: '取消',
+            onOk: async () => {
+                await deleteMessages(Array.from(selected));
+                setMessages(prev => prev.filter(item => !selected.has(item.id)));
+                setBulkMode(false);
+                setSelected(new Set());
+            }
+        });
+    };
+
     const toggleSidebar = () => {
         const next = !sidebarCollapsed;
         localStorage.setItem('sidebar-collapsed', next ? '1' : '0');
@@ -287,39 +332,54 @@ const App = () => {
                             >
                                 <SidebarIcon className="h-[18px] w-[18px]" />
                             </button>
-                            <Typography.Title
-                                level={5}
-                                style={{ margin: 0 }}
-                                className="min-w-0 flex-1 truncate"
-                                editable={{
-                                    onChange: value => handleRename(activeId, value),
-                                    tooltip: '重命名会话'
-                                }}
-                            >
-                                {activeTitle || '新对话'}
-                            </Typography.Title>
+                            {bulkMode ? (
+                                <span className="min-w-0 flex-1 truncate text-[16px] font-semibold text-[#1f2329]">选择对话</span>
+                            ) : (
+                                <Typography.Title
+                                    level={5}
+                                    style={{ margin: 0 }}
+                                    className="min-w-0 flex-1 truncate"
+                                    editable={{
+                                        onChange: value => handleRename(activeId, value),
+                                        tooltip: '重命名会话'
+                                    }}
+                                >
+                                    {activeTitle || '新对话'}
+                                </Typography.Title>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <Select
-                                value={model}
-                                onChange={setModel}
-                                variant="filled"
-                                style={{ minWidth: 170 }}
-                                disabled={loading}
-                                options={MODELS.map(item => ({ value: item.id, label: item.name }))}
-                            />
-                            <button
-                                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[15px] text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
-                                onClick={() => setStorageOpen(true)}
-                                title="会话存储管理"
-                            >
-                                <DatabaseOutlined />
-                            </button>
+                            {bulkMode ? (
+                                <button
+                                    className="cursor-pointer rounded-lg px-3 py-1.5 text-[14px] text-[#646a73] transition-colors hover:bg-[#f2f3f5] hover:text-[#1f2329]"
+                                    onClick={exitBulkMode}
+                                >
+                                    取消
+                                </button>
+                            ) : (
+                                <>
+                                    <Select
+                                        value={model}
+                                        onChange={setModel}
+                                        variant="filled"
+                                        style={{ minWidth: 170 }}
+                                        disabled={loading}
+                                        options={MODELS.map(item => ({ value: item.id, label: item.name }))}
+                                    />
+                                    <button
+                                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[15px] text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                                        onClick={() => setStorageOpen(true)}
+                                        title="会话存储管理"
+                                    >
+                                        <DatabaseOutlined />
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </header>
 
                     <main className="flex-1 overflow-y-auto py-6" ref={scrollRef} onScroll={handleScroll}>
-                        <div className="mx-auto w-full max-w-[860px] px-5">
+                        <div className={`mx-auto flex w-full max-w-[860px] flex-col px-5 ${bulkMode ? 'gap-1' : 'gap-6'}`}>
                             {empty ? (
                                 <div className="mt-[12vh] text-center text-[#1f2329]">
                                     <div className="text-5xl">👋</div>
@@ -330,16 +390,38 @@ const App = () => {
                                     </p>
                                 </div>
                             ) : (
-                                messages.map((item, index) => <MessageItem key={item.id} message={item} streaming={loading && index === messages.length - 1} />)
+                                messages.map((item, index) => (
+                                    <MessageItem
+                                        key={item.id}
+                                        message={item}
+                                        streaming={loading && index === messages.length - 1}
+                                        bulkMode={bulkMode}
+                                        checked={selected.has(item.id)}
+                                        onToggleSelect={toggleSelect}
+                                        onDelete={enterBulkMode}
+                                        disabled={loading}
+                                    />
+                                ))
                             )}
                         </div>
                     </main>
 
                     <footer className="pt-2 pb-[18px]">
-                        <div className="mx-auto w-full max-w-[860px] px-5">
+                        <div className={`mx-auto w-full max-w-[860px] px-5 ${bulkMode ? 'pointer-events-none opacity-40' : ''}`}>
                             <ChatInput onSend={handleSend} onStop={handleStop} loading={loading} allowImage={currentModel.vision} />
                         </div>
                     </footer>
+                    {bulkMode && (
+                        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e5e6eb] bg-white/95 py-3 backdrop-blur">
+                            <button
+                                className="mx-auto flex cursor-pointer items-center justify-center rounded-full bg-[#f53f3f] px-12 py-2.5 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                disabled={selected.size === 0}
+                                onClick={confirmDeleteSelected}
+                            >
+                                删除
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <CodeRunner runner={runner} onClose={() => setRunner(null)} />
                 <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} />

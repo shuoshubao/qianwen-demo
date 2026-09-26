@@ -1,7 +1,7 @@
 // 基于 IndexedDB 的本地会话存储
 // 库结构:
 //   sessions: { id, title, model, createdAt, updatedAt }  会话元信息, id 为 crypto.randomUUID()
-//   messages: { id, sessionId, role, content, images, time }  消息, 按 sessionId 建索引
+//   messages: { id, sessionId, role, content, attachments, time }  消息, 按 sessionId 建索引
 const DB_NAME = 'qianwen-demo';
 const DB_VERSION = 1;
 const STORE_SESSIONS = 'sessions';
@@ -71,6 +71,20 @@ export const listSessions = () =>
     );
 
 export const addMessage = msg => request(STORE_MESSAGES, 'readwrite', store => store.put(msg));
+
+export const deleteMessages = ids =>
+    openDB().then(
+        db =>
+            new Promise((resolve, reject) => {
+                const t = db.transaction(STORE_MESSAGES, 'readwrite');
+                const store = t.objectStore(STORE_MESSAGES);
+                for (const id of ids) {
+                    store.delete(id);
+                }
+                t.oncomplete = () => resolve();
+                t.onerror = () => reject(t.error);
+            })
+    );
 
 export const listMessages = sessionId =>
     request(STORE_MESSAGES, 'readonly', store => store.index('sessionId').getAll(sessionId)).then(list =>
