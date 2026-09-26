@@ -1,3 +1,4 @@
+import { DatabaseOutlined } from '@ant-design/icons';
 import { Select, Typography } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
@@ -5,6 +6,7 @@ import ChatInput from './components/ChatInput';
 import CodeRunner from './components/CodeRunner';
 import MessageItem from './components/MessageItem';
 import SessionList from './components/SessionList';
+import StorageModal from './components/StorageModal';
 import { addMessage, createSession, deleteSession, getSession, listMessages, listSessions, updateSession } from './db';
 import { RunnerContext } from './runnerContext';
 
@@ -25,6 +27,7 @@ const App = () => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [runner, setRunner] = useState(null); // { code, lang } | null
+    const [storageOpen, setStorageOpen] = useState(false);
     const abortRef = useRef(null);
     const scrollRef = useRef(null);
     const stickToBottomRef = useRef(true); // 用户是否停留在底部, 上滚看历史时暂停自动滚动
@@ -89,13 +92,14 @@ const App = () => {
         stickToBottomRef.current = true;
     };
 
-    const handleDelete = async id => {
-        if (loading) return;
+    const handleDeleteMany = async ids => {
+        if (loading || ids.length === 0) return false;
         try {
-            await deleteSession(id);
-            const rest = sessions.filter(item => item.id !== id);
+            for (const item of ids) await deleteSession(item);
+            const idSet = new Set(ids);
+            const rest = sessions.filter(item => !idSet.has(item.id));
             setSessions(rest);
-            if (id === activeId) {
+            if (idSet.has(activeId)) {
                 if (rest.length > 0) {
                     await switchSession(rest[0].id);
                 } else {
@@ -103,10 +107,13 @@ const App = () => {
                     setMessages([]);
                 }
             }
+            return true;
         } catch {
-            /* ignore */
+            return false;
         }
     };
+
+    const handleDelete = id => handleDeleteMany([id]);
 
     const handleRename = (id, title) => {
         const t = (title || '').trim();
@@ -234,14 +241,23 @@ const App = () => {
                         >
                             {activeTitle || '新对话'}
                         </Typography.Title>
-                        <Select
-                            value={model}
-                            onChange={setModel}
-                            variant="filled"
-                            style={{ minWidth: 170 }}
-                            disabled={loading}
-                            options={MODELS.map(item => ({ value: item.id, label: item.name }))}
-                        />
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={model}
+                                onChange={setModel}
+                                variant="filled"
+                                style={{ minWidth: 170 }}
+                                disabled={loading}
+                                options={MODELS.map(item => ({ value: item.id, label: item.name }))}
+                            />
+                            <button
+                                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[15px] text-[#646a73] hover:bg-[#f2f3f5] hover:text-[#722ed1]"
+                                onClick={() => setStorageOpen(true)}
+                                title="会话存储管理"
+                            >
+                                <DatabaseOutlined />
+                            </button>
+                        </div>
                     </header>
 
                     <main className="flex-1 overflow-y-auto py-6" ref={scrollRef} onScroll={handleScroll}>
@@ -270,6 +286,7 @@ const App = () => {
                     </footer>
                 </div>
                 <CodeRunner runner={runner} onClose={() => setRunner(null)} />
+                <StorageModal open={storageOpen} onClose={() => setStorageOpen(false)} sessions={sessions} onDeleteMany={handleDeleteMany} />
             </div>
         </RunnerContext.Provider>
     );

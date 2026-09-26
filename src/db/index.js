@@ -75,6 +75,34 @@ export const listMessages = sessionId =>
         (list || []).sort((item1, item2) => item1.time - item2.time)
     );
 
+// 消息对象序列化为 JSON 后的 UTF-8 字节数 (图片为 base64 字符串, 占比最大)
+const jsonSize = value => {
+    try {
+        return new TextEncoder().encode(JSON.stringify(value)).length;
+    } catch {
+        return 0;
+    }
+};
+
+// 统计每个会话的消息数与占用空间, 返回 [{ id, count, size }]
+export const getSessionStats = async () => {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const req = db.transaction(STORE_MESSAGES, 'readonly').objectStore(STORE_MESSAGES).getAll();
+        req.onsuccess = () => {
+            const map = new Map();
+            for (const item of req.result || []) {
+                const cur = map.get(item.sessionId) || { count: 0, size: 0 };
+                cur.count += 1;
+                cur.size += jsonSize(item);
+                map.set(item.sessionId, cur);
+            }
+            resolve(Array.from(map, ([id, stat]) => ({ id, ...stat })));
+        };
+        req.onerror = () => reject(req.error);
+    });
+};
+
 // 删除会话, 并在同一事务内清理该会话的全部消息
 export const deleteSession = id =>
     openDB().then(
