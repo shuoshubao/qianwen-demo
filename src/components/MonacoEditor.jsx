@@ -49,7 +49,7 @@ const MonacoEditor = forwardRef(({ value, language, onChange, readOnly }, ref) =
                 const editor = monaco.editor.create(containerRef.current, {
                     value: valueRef.current,
                     language: langRef.current,
-                    theme: 'vs',
+                    theme: 'vs-dark',
                     readOnly: !!readOnlyRef.current,
                     domReadOnly: !!readOnlyRef.current,
                     renderLineHighlight: readOnlyRef.current ? 'none' : 'line',
@@ -72,7 +72,6 @@ const MonacoEditor = forwardRef(({ value, language, onChange, readOnly }, ref) =
             editorRef.current?.dispose();
             editorRef.current = null;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // 外部 value / language 变化时同步 (编辑中 value 与内部一致, 不会重复 setValue)
@@ -87,7 +86,6 @@ const MonacoEditor = forwardRef(({ value, language, onChange, readOnly }, ref) =
         if (monacoRef.current) {
             monacoRef.current.editor.setModelLanguage(editor.getModel(), language);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value, language]);
 
     return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
