@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 
-// 提供 openRunner(files) 给深层级组件 (如代码块) 打开运行面板, files: [{ name, lang, code }]
+// openRunner(files) 打开代码运行面板: files: [{ name, lang, code }]
+// openFile(file) 打开文件预览面板: file: { name, size, content }
 export const RunnerContext = createContext(null);
 
 export const useRunner = () => useContext(RunnerContext);

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import ChatInput from './components/ChatInput';
 import CodeRunner from './components/CodeRunner';
+import FilePreview from './components/FilePreview';
 import MessageItem from './components/MessageItem';
 import SessionList from './components/SessionList';
 import StorageModal from './components/StorageModal';
@@ -27,6 +28,7 @@ const App = () => {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [runner, setRunner] = useState(null); // { code, lang } | null
+    const [previewFile, setPreviewFile] = useState(null); // { name, size, content } | null
     const [storageOpen, setStorageOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === '1');
     const abortRef = useRef(null);
@@ -91,6 +93,7 @@ const App = () => {
             setMessages(msgs);
             stickToBottomRef.current = true;
             setRunner(null); // 切会话时关闭预览模块
+            setPreviewFile(null);
         } catch {
             /* ignore */
         }
@@ -261,7 +264,7 @@ const App = () => {
     const activeTitle = sessions.find(item => item.id === activeId)?.title;
 
     return (
-        <RunnerContext.Provider value={{ openRunner: files => setRunner({ files }) }}>
+        <RunnerContext.Provider value={{ openRunner: files => setRunner({ files }), openFile: file => setPreviewFile(file) }}>
             <div className="flex h-screen bg-white">
                 <div className="flex-shrink-0 overflow-hidden transition-[width] duration-200" style={{ width: sidebarCollapsed ? 0 : 250 }}>
                     <SessionList
@@ -339,6 +342,7 @@ const App = () => {
                     </footer>
                 </div>
                 <CodeRunner runner={runner} onClose={() => setRunner(null)} />
+                <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} />
                 <StorageModal open={storageOpen} onClose={() => setStorageOpen(false)} sessions={sessions} onDeleteMany={handleDeleteMany} />
             </div>
         </RunnerContext.Provider>
