@@ -31,65 +31,67 @@ const openDB = () => {
 };
 
 // 单 store 的读写封装: fn(objectStore) 返回请求对象
-const request = (storeName, mode, fn) =>
-    openDB().then(
-        db =>
-            new Promise((resolve, reject) => {
-                const req = fn(db.transaction(storeName, mode).objectStore(storeName));
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            })
-    );
+const request = (storeName, mode, fn) => {
+    return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const req = fn(db.transaction(storeName, mode).objectStore(storeName));
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    });
+};
 
 // 更新会话部分字段, 并刷新 updatedAt (用于列表排序)
-export const updateSession = (id, patch) =>
-    openDB().then(
-        db =>
-            new Promise((resolve, reject) => {
-                const t = db.transaction(STORE_SESSIONS, 'readwrite');
-                const store = t.objectStore(STORE_SESSIONS);
-                const getReq = store.get(id);
-                getReq.onsuccess = () => {
-                    const cur = getReq.result;
-                    if (!cur) {
-                        return;
-                    }
-                    store.put({ ...cur, ...patch, updatedAt: Date.now() });
-                };
-                t.oncomplete = () => resolve();
-                t.onerror = () => reject(t.error);
-            })
-    );
+export const updateSession = (id, patch) => {
+    return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const t = db.transaction(STORE_SESSIONS, 'readwrite');
+            const store = t.objectStore(STORE_SESSIONS);
+            const getReq = store.get(id);
+            getReq.onsuccess = () => {
+                const cur = getReq.result;
+                if (!cur) {
+                    return;
+                }
+                store.put({ ...cur, ...patch, updatedAt: Date.now() });
+            };
+            t.oncomplete = () => resolve();
+            t.onerror = () => reject(t.error);
+        });
+    });
+};
 
 export const createSession = session => request(STORE_SESSIONS, 'readwrite', store => store.put(session));
 
 export const getSession = id => request(STORE_SESSIONS, 'readonly', store => store.get(id));
 
-export const listSessions = () =>
-    request(STORE_SESSIONS, 'readonly', store => store.getAll()).then(list =>
-        (list || []).sort((item1, item2) => (item2.updatedAt || 0) - (item1.updatedAt || 0))
-    );
+export const listSessions = () => {
+    return request(STORE_SESSIONS, 'readonly', store => store.getAll()).then(list => {
+        return (list || []).sort((item1, item2) => (item2.updatedAt || 0) - (item1.updatedAt || 0));
+    });
+};
 
 export const addMessage = msg => request(STORE_MESSAGES, 'readwrite', store => store.put(msg));
 
-export const deleteMessages = ids =>
-    openDB().then(
-        db =>
-            new Promise((resolve, reject) => {
-                const t = db.transaction(STORE_MESSAGES, 'readwrite');
-                const store = t.objectStore(STORE_MESSAGES);
-                for (const id of ids) {
-                    store.delete(id);
-                }
-                t.oncomplete = () => resolve();
-                t.onerror = () => reject(t.error);
-            })
-    );
+export const deleteMessages = ids => {
+    return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const t = db.transaction(STORE_MESSAGES, 'readwrite');
+            const store = t.objectStore(STORE_MESSAGES);
+            for (const id of ids) {
+                store.delete(id);
+            }
+            t.oncomplete = () => resolve();
+            t.onerror = () => reject(t.error);
+        });
+    });
+};
 
-export const listMessages = sessionId =>
-    request(STORE_MESSAGES, 'readonly', store => store.index('sessionId').getAll(sessionId)).then(list =>
-        (list || []).sort((item1, item2) => item1.time - item2.time)
-    );
+export const listMessages = sessionId => {
+    return request(STORE_MESSAGES, 'readonly', store => store.index('sessionId').getAll(sessionId)).then(list => {
+        return (list || []).sort((item1, item2) => item1.time - item2.time);
+    });
+};
 
 // 消息对象序列化为 JSON 后的 UTF-8 字节数 (图片为 base64 字符串, 占比最大)
 const jsonSize = value => {
@@ -120,21 +122,21 @@ export const getSessionStats = async () => {
 };
 
 // 删除会话, 并在同一事务内清理该会话的全部消息
-export const deleteSession = id =>
-    openDB().then(
-        db =>
-            new Promise((resolve, reject) => {
-                const t = db.transaction([STORE_SESSIONS, STORE_MESSAGES], 'readwrite');
-                t.objectStore(STORE_SESSIONS).delete(id);
-                const cursorReq = t.objectStore(STORE_MESSAGES).index('sessionId').openCursor(IDBKeyRange.only(id));
-                cursorReq.onsuccess = () => {
-                    const cursor = cursorReq.result;
-                    if (cursor) {
-                        cursor.delete();
-                        cursor.continue();
-                    }
-                };
-                t.oncomplete = () => resolve();
-                t.onerror = () => reject(t.error);
-            })
-    );
+export const deleteSession = id => {
+    return openDB().then(db => {
+        return new Promise((resolve, reject) => {
+            const t = db.transaction([STORE_SESSIONS, STORE_MESSAGES], 'readwrite');
+            t.objectStore(STORE_SESSIONS).delete(id);
+            const cursorReq = t.objectStore(STORE_MESSAGES).index('sessionId').openCursor(IDBKeyRange.only(id));
+            cursorReq.onsuccess = () => {
+                const cursor = cursorReq.result;
+                if (cursor) {
+                    cursor.delete();
+                    cursor.continue();
+                }
+            };
+            t.oncomplete = () => resolve();
+            t.onerror = () => reject(t.error);
+        });
+    });
+};

@@ -21,6 +21,7 @@
 -   函数统一使用 `const fn = () => {}` 箭头函数形式, 不使用 `function` 声明 (包括 React 组件)
 -   不使用 `var`, 统一 `const` / `let`
 -   `if` 条件语句必须加大括号, 禁止单行 `if (condition) statement;` 写法 (包括单行的 `if (...) return;`, 统一写成 `if (...) { return; }`), `else` 同理
+-   箭头函数仅当函数体是单个简单表达式时才使用隐式返回 (`=> expr`); 函数体包含多条语句或存在嵌套回调 (如 Promise 链) 时, 必须使用 `{ return ...; }` 显式返回, 禁止隐式返回的多行嵌套写法
 
 ### React 组件
 
