@@ -3,8 +3,8 @@ import { Popconfirm } from 'antd';
 import { cn } from 'cn';
 import { useEffect, useRef, useState } from 'react';
 
-/** 会话时间展示：今天显示时分，昨天/今年内/更早依次降级 */
-function formatTime(ts) {
+// 会话时间展示: 今天显示时分, 昨天/今年内/更早依次降级
+const formatTime = ts => {
     if (!ts) return '';
     const d = new Date(ts);
     const now = new Date();
@@ -17,9 +17,9 @@ function formatTime(ts) {
     if (d.getTime() >= startOfToday - 86400000) return '昨天';
     if (d.getFullYear() === now.getFullYear()) return `${d.getMonth() + 1}月${d.getDate()}日`;
     return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-}
+};
 
-export default function SessionList({ sessions, activeId, disabled, onNew, onSwitch, onDelete, onRename }) {
+const SessionList = ({ sessions, activeId, disabled, onNew, onSwitch, onDelete, onRename }) => {
     const [editingId, setEditingId] = useState(null);
     const [draft, setDraft] = useState('');
     const inputRef = useRef(null);
@@ -28,9 +28,9 @@ export default function SessionList({ sessions, activeId, disabled, onNew, onSwi
         if (editingId) inputRef.current?.select();
     }, [editingId]);
 
-    const startEdit = s => {
-        setEditingId(s.id);
-        setDraft(s.title || '');
+    const startEdit = item => {
+        setEditingId(item.id);
+        setDraft(item.title || '');
     };
 
     const commitEdit = () => {
@@ -51,17 +51,17 @@ export default function SessionList({ sessions, activeId, disabled, onNew, onSwi
             </div>
 
             <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-3">
-                {sessions.map(s => (
+                {sessions.map(item => (
                     <div
-                        key={s.id}
+                        key={item.id}
                         className={cn(
                             'group relative flex cursor-pointer items-center rounded-[10px] px-3 py-2.5 transition-colors',
-                            s.id === activeId ? 'bg-[#ece9f8]' : 'hover:bg-[#eef0f4]'
+                            item.id === activeId ? 'bg-[#ece9f8]' : 'hover:bg-[#eef0f4]'
                         )}
-                        onClick={() => !disabled && onSwitch(s.id)}
+                        onClick={() => !disabled && onSwitch(item.id)}
                     >
                         <div className="min-w-0 flex-1">
-                            {editingId === s.id ? (
+                            {editingId === item.id ? (
                                 <input
                                     ref={inputRef}
                                     className="w-full rounded border border-[#722ed1] bg-white px-1.5 py-0.5 text-[13px] text-[#1f2329] outline-none"
@@ -75,14 +75,14 @@ export default function SessionList({ sessions, activeId, disabled, onNew, onSwi
                                     onClick={e => e.stopPropagation()}
                                 />
                             ) : (
-                                <div className={cn('truncate text-[13px]', s.id === activeId ? 'text-[#722ed1]' : 'text-[#1f2329]')}>
-                                    {s.title || '新对话'}
+                                <div className={cn('truncate text-[13px]', item.id === activeId ? 'text-[#722ed1]' : 'text-[#1f2329]')}>
+                                    {item.title || '新对话'}
                                 </div>
                             )}
-                            {editingId !== s.id && <div className="mt-0.5 text-xs text-[#a8adb5]">{formatTime(s.updatedAt)}</div>}
+                            {editingId !== item.id && <div className="mt-0.5 text-xs text-[#a8adb5]">{formatTime(item.updatedAt)}</div>}
                         </div>
 
-                        {editingId !== s.id && (
+                        {editingId !== item.id && (
                             <div
                                 className="absolute right-1.5 flex items-center gap-0.5 rounded-md bg-white/90 p-0.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
                                 onClick={e => e.stopPropagation()}
@@ -90,17 +90,17 @@ export default function SessionList({ sessions, activeId, disabled, onNew, onSwi
                                 <button
                                     className="cursor-pointer rounded p-1 text-xs text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#3370ff]"
                                     title="重命名"
-                                    onClick={() => startEdit(s)}
+                                    onClick={() => startEdit(item)}
                                 >
                                     <EditOutlined />
                                 </button>
                                 <Popconfirm
-                                    title="删除该会话？"
-                                    description="会话内容将一并清除，不可恢复"
+                                    title="删除该会话?"
+                                    description="会话内容将一并清除, 不可恢复"
                                     okText="删除"
                                     cancelText="取消"
                                     okButtonProps={{ danger: true }}
-                                    onConfirm={() => onDelete(s.id)}
+                                    onConfirm={() => onDelete(item.id)}
                                 >
                                     <button
                                         className="cursor-pointer rounded p-1 text-xs text-[#8a9099] hover:bg-[#f2f3f5] hover:text-[#f53f3f]"
@@ -117,4 +117,6 @@ export default function SessionList({ sessions, activeId, disabled, onNew, onSwi
             </div>
         </aside>
     );
-}
+};
+
+export default SessionList;

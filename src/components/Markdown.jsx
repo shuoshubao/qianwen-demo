@@ -6,18 +6,18 @@ import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 import { useRunner } from '../runnerContext';
 
-// 支持「运行」的语言：仅限本身可独立渲染成完整页面的文档，
-// css/js 片段拼出预览是空白页，无需运行按钮（见 CodeRunner.buildHtml）
+// 支持运行的语言: 仅限本身可独立渲染成完整页面的文档,
+// css/js 片段拼出预览是空白页, 无需运行按钮 (见 CodeRunner.buildHtml)
 const RUNNABLE_LANGS = ['html', 'xml', 'svg'];
 
-function CodeBlock({ className, children, node, streaming, ...rest }) {
+const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
     const [copied, setCopied] = useState(false);
     const preRef = useRef(null);
     const { openRunner } = useRunner();
     const lang = /language-(\w+)/.exec(className || '')?.[1] || '';
 
-    // react-markdown v9 不再传 inline prop，带 language-* 类名的是块级代码，
-    // 否则（如段落内的 `code`）按行内渲染，避免 div/pre 嵌套进 <p>
+    // react-markdown v9 不再传 inline prop, 带 language-* 类名的是块级代码,
+    // 否则 (如段落内的 `code`) 按行内渲染, 避免 div/pre 嵌套进 <p>
     if (!lang) {
         return (
             <code className="rounded bg-[rgba(15,20,30,0.06)] px-1.5 py-0.5 font-mono text-[13px] text-[#d63384]" {...rest}>
@@ -29,8 +29,8 @@ function CodeBlock({ className, children, node, streaming, ...rest }) {
 
     const codeText = () => preRef.current?.innerText ?? '';
 
-    // children 经 rehype-highlight 处理后是高亮 span 元素数组，
-    // 直接转字符串会得到 [object Object]，改为从 DOM 取纯文本
+    // children 经 rehype-highlight 处理后是高亮 span 元素数组,
+    // 直接转字符串会得到 [object Object], 改为从 DOM 取纯文本
     const copy = async () => {
         try {
             const text = codeText();
@@ -46,7 +46,7 @@ function CodeBlock({ className, children, node, streaming, ...rest }) {
         <div className="mb-3 overflow-hidden rounded-[10px] border border-[#e5e6eb] bg-[#fbfbfc]">
             <div className="flex items-center justify-between bg-[#f2f3f5] px-3 py-1.5 text-xs text-[#646a73]">
                 <span className="uppercase tracking-[0.5px]">{lang || 'text'}</span>
-                {/* 流式生成中内容还在变化，隐藏操作按钮 */}
+                {/* 流式生成中内容还在变化, 隐藏操作按钮 */}
                 {!streaming && (
                     <div className="flex items-center gap-1">
                         {runnable && (
@@ -58,10 +58,7 @@ function CodeBlock({ className, children, node, streaming, ...rest }) {
                                 <PlayCircleOutlined /> 运行
                             </button>
                         )}
-                        <button
-                            className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]"
-                            onClick={copy}
-                        >
+                        <button className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[#722ed1] hover:bg-[rgba(114,46,209,0.1)]" onClick={copy}>
                             {copied ? '已复制' : '复制'}
                         </button>
                     </div>
@@ -74,17 +71,17 @@ function CodeBlock({ className, children, node, streaming, ...rest }) {
             </pre>
         </div>
     );
-}
+};
 
-export default function Markdown({ children, streaming }) {
+const Markdown = ({ children, streaming }) => {
     return (
         <div className="markdown-body">
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
                 components={{
-                    // react-markdown 默认渲染 <pre><code>，而 CodeBlock 非行内分支自带 pre，
-                    // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套（双 pre 样式叠加）
+                    // react-markdown 默认渲染 <pre><code>, 而 CodeBlock 非行内分支自带 pre,
+                    // 映射掉外层 pre 避免 <pre><div>...</div></pre> 的非法嵌套 (双 pre 样式叠加)
                     pre: ({ children }) => <>{children}</>,
                     code: props => <CodeBlock {...props} streaming={streaming} />
                 }}
@@ -93,4 +90,6 @@ export default function Markdown({ children, streaming }) {
             </ReactMarkdown>
         </div>
     );
-}
+};
+
+export default Markdown;

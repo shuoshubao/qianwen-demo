@@ -10,7 +10,7 @@ body {
     @apply m-0 font-sans antialiased text-[#1f2329];
 }
 
-/* ---------- Markdown 内容区（由 react-markdown 渲染，无法逐元素写 className） ---------- */
+/* ---------- Markdown 内容区 (由 react-markdown 渲染, 无法逐元素写 className) ---------- */
 @layer components {
     .markdown-body {
         @apply text-[15px] leading-[1.75] break-words text-[#1f2329];

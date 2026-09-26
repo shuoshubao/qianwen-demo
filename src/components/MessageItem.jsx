@@ -5,15 +5,15 @@ import { splitThinking } from '../api/ollama';
 import Markdown from './Markdown';
 import ReasoningPanel from './ReasoningPanel';
 
-function formatTime(ts) {
+const formatTime = ts => {
     if (!ts) return '';
     const d = new Date(ts);
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}`;
-}
+};
 
-function MessageMeta({ time, text, align }) {
+const MessageMeta = ({ time, text, align }) => {
     const [copied, setCopied] = useState(false);
     const copy = async () => {
         if (!text) return;
@@ -43,9 +43,9 @@ function MessageMeta({ time, text, align }) {
             </button>
         </div>
     );
-}
+};
 
-export default function MessageItem({ message, streaming }) {
+const MessageItem = ({ message, streaming }) => {
     const isUser = message.role === 'user';
 
     if (isUser) {
@@ -54,8 +54,8 @@ export default function MessageItem({ message, streaming }) {
                 <div className="flex max-w-[85%] flex-col items-end gap-2">
                     {message.images?.length > 0 && (
                         <div className="flex flex-wrap justify-end gap-2">
-                            {message.images.map((src, i) => (
-                                <img key={i} src={src} alt="upload" className="max-h-[180px] max-w-[180px] rounded-[10px] object-cover" />
+                            {message.images.map((item, index) => (
+                                <img key={index} src={item} alt="upload" className="max-h-[180px] max-w-[180px] rounded-[10px] object-cover" />
                             ))}
                         </div>
                     )}
@@ -91,4 +91,6 @@ export default function MessageItem({ message, streaming }) {
             </div>
         </div>
     );
-}
+};
+
+export default MessageItem;

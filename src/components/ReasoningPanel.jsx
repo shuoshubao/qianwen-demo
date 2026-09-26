@@ -2,7 +2,7 @@ import { BulbOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import Markdown from './Markdown';
 
-export default function ReasoningPanel({ reasoning, thinking }) {
+const ReasoningPanel = ({ reasoning, thinking }) => {
     const [open, setOpen] = useState(true);
     if (!reasoning) return null;
 
@@ -10,7 +10,7 @@ export default function ReasoningPanel({ reasoning, thinking }) {
         <div className="overflow-hidden rounded-xl border border-[#eceef1] bg-[#f6f7f9]">
             <button
                 className="flex w-full cursor-pointer items-center gap-2 bg-transparent px-3.5 py-2.5 text-[13px] text-[#646a73]"
-                onClick={() => setOpen(v => !v)}
+                onClick={() => setOpen(prev => !prev)}
             >
                 <BulbOutlined />
                 <span className="flex-1 text-left">{thinking ? '思考中…' : '已深度思考'}</span>
@@ -23,4 +23,6 @@ export default function ReasoningPanel({ reasoning, thinking }) {
             )}
         </div>
     );
-}
+};
+
+export default ReasoningPanel;

@@ -1,7 +1,7 @@
 import { ArrowUpOutlined, CloseOutlined, PictureOutlined } from '@ant-design/icons';
 import { useRef, useState } from 'react';
 
-export default function ChatInput({ onSend, onStop, loading, allowImage }) {
+const ChatInput = ({ onSend, onStop, loading, allowImage }) => {
     const [text, setText] = useState('');
     const [images, setImages] = useState([]); // { url, base64 }
     const fileRef = useRef(null);
@@ -15,12 +15,12 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
     const pickImages = async e => {
         const files = Array.from(e.target.files || []);
         const next = [];
-        for (const f of files) {
-            const url = URL.createObjectURL(f);
+        for (const item of files) {
+            const url = URL.createObjectURL(item);
             const base64 = await new Promise(resolve => {
                 const r = new FileReader();
                 r.onload = () => resolve(String(r.result).split(',')[1] || '');
-                r.readAsDataURL(f);
+                r.readAsDataURL(item);
             });
             next.push({ url, base64 });
         }
@@ -28,8 +28,8 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
         e.target.value = '';
     };
 
-    const removeImage = i => {
-        setImages(prev => prev.filter((_, idx) => idx !== i));
+    const removeImage = index => {
+        setImages(prev => prev.filter((item, index1) => index1 !== index));
     };
 
     const submit = () => {
@@ -55,12 +55,12 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
         <div className="rounded-[20px] border border-[#e5e6eb] bg-white p-2.5 px-3 shadow-[0_6px_24px_rgba(15,20,30,0.06)] transition-colors focus-within:border-[#3370ff]">
             {images.length > 0 && (
                 <div className="flex flex-wrap gap-2 px-1.5 pt-1.5 pb-2.5">
-                    {images.map((img, i) => (
-                        <div className="relative" key={i}>
-                            <img src={img.url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
+                    {images.map((item, index) => (
+                        <div className="relative" key={index}>
+                            <img src={item.url} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
                             <button
                                 className="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-black/60 text-[10px] text-white"
-                                onClick={() => removeImage(i)}
+                                onClick={() => removeImage(index)}
                             >
                                 <CloseOutlined />
                             </button>
@@ -81,7 +81,7 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
                 <textarea
                     ref={taRef}
                     className="max-h-[200px] flex-1 resize-none bg-transparent px-1 py-1.5 text-[15px] leading-[1.6] text-[#1f2329] outline-none"
-                    placeholder="给 AI 发送消息，Enter 发送，Shift+Enter 换行"
+                    placeholder="给 AI 发送消息, Enter 发送, Shift+Enter 换行"
                     value={text}
                     rows={1}
                     onChange={e => {
@@ -112,4 +112,6 @@ export default function ChatInput({ onSend, onStop, loading, allowImage }) {
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={pickImages} />
         </div>
     );
-}
+};
+
+export default ChatInput;

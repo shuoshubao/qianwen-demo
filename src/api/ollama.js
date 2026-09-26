@@ -1,4 +1,4 @@
-// Ollama 本地服务客户端，默认地址 http://localhost:11434
+// Ollama 本地服务客户端, 默认地址 http://localhost:11434
 const OLLAMA_BASE = 'http://localhost:11434';
 
 export const MODELS = [
@@ -7,14 +7,14 @@ export const MODELS = [
 ];
 
 /**
- * 以流式方式调用 Ollama 的 /api/chat 接口。
+ * 以流式方式调用 Ollama 的 /api/chat 接口.
  * @param {Object} opts
  * @param {string} opts.model 模型 id
  * @param {Array} opts.messages [{ role, content, images? }]
  * @param {AbortSignal} opts.signal 用于中断请求
  * @param {(chunk: string) => void} opts.onToken 每次收到增量文本时回调
  */
-export async function streamChat({ model, messages, signal, onToken }) {
+export const streamChat = async ({ model, messages, signal, onToken }) => {
     const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,7 @@ export async function streamChat({ model, messages, signal, onToken }) {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        // Ollama 返回 NDJSON，每行一个 JSON 对象
+        // Ollama 返回 NDJSON, 每行一个 JSON 对象
         let idx;
         while ((idx = buffer.indexOf('\n')) !== -1) {
             const line = buffer.slice(0, idx).trim();
@@ -58,8 +58,8 @@ export async function streamChat({ model, messages, signal, onToken }) {
     }
 }
 
-/** 把 File 读成 base64（不含 data: 前缀），供 Ollama 多模态使用 */
-export function fileToBase64(file) {
+/** 把 File 读成 base64 (不含 data: 前缀), 供 Ollama 多模态使用 */
+export const fileToBase64 = file => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -70,13 +70,13 @@ export function fileToBase64(file) {
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
-}
+};
 
 /**
- * 从 DeepSeek-R1 的输出中拆分思考过程与正文。
- * 模型会把推理放在 <think>...</think> 中。
+ * 从 DeepSeek-R1 的输出中拆分思考过程与正文.
+ * 模型会把推理放在思考标签中.
  */
-export function splitThinking(content) {
+export const splitThinking = content => {
     const openTag = '<think>';
     const closeTag = '</think>';
     if (!content.includes(openTag)) {
@@ -85,10 +85,10 @@ export function splitThinking(content) {
     const start = content.indexOf(openTag) + openTag.length;
     const end = content.indexOf(closeTag);
     if (end === -1) {
-        // 还在思考中，尚未闭合
+        // 还在思考中, 尚未闭合
         return { reasoning: content.slice(start), answer: '' };
     }
     const reasoning = content.slice(start, end);
     const answer = content.slice(end + closeTag.length);
     return { reasoning, answer };
-}
+};

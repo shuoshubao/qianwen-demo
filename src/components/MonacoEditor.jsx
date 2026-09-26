@@ -1,9 +1,9 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-// @monaco-editor/loader 与 monaco-editor 本体都不走 npm 打包，
-// 首次打开编辑器时从 CDN 按需加载（esm.sh 转译 CJS 为 ESM）
+// @monaco-editor/loader 与 monaco-editor 本体都不走 npm 打包,
+// 首次打开编辑器时从 CDN 按需加载 (esm.sh 转译 CJS 为 ESM)
 let loaderPromise = null;
-function getLoader() {
+const getLoader = () => {
     if (!loaderPromise) {
         loaderPromise = import('https://esm.sh/@monaco-editor/loader@1.4.0').then(m => {
             const loader = m.default;
@@ -18,7 +18,7 @@ function getLoader() {
     return loaderPromise;
 }
 
-const MonacoEditor = forwardRef(function MonacoEditor({ value, language, onChange }, ref) {
+const MonacoEditor = forwardRef(({ value, language, onChange }, ref) => {
     const containerRef = useRef(null);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
@@ -59,7 +59,7 @@ const MonacoEditor = forwardRef(function MonacoEditor({ value, language, onChang
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // 外部 value / language 变化时同步（编辑中 value 与内部一致，不会重复 setValue）
+    // 外部 value / language 变化时同步 (编辑中 value 与内部一致, 不会重复 setValue)
     useEffect(() => {
         const editor = editorRef.current;
         if (!editor) return;

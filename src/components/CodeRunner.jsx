@@ -15,11 +15,11 @@ const LANG_MAP = {
     json: 'json'
 };
 
-// iframe 内注入错误捕获，把 JS 报错显示在预览页顶部
+// iframe 内注入错误捕获, 把 JS 报错显示在预览页顶部
 const ERROR_GUARD = `<script>
-window.addEventListener('error', function (e) {
-    var el = document.getElementById('__error__') || (function () {
-        var d = document.createElement('div');
+window.addEventListener('error', (e) => {
+    const el = document.getElementById('__error__') || (() => {
+        const d = document.createElement('div');
         d.id = '__error__';
         d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff1f0;color:#cf1322;padding:8px 12px;font:12px/1.5 monospace;border-bottom:1px solid #ffa39e;white-space:pre-wrap;';
         (document.body || document.documentElement).appendChild(d);
@@ -29,8 +29,8 @@ window.addEventListener('error', function (e) {
 });
 </script>`;
 
-/** 按语言把代码组装成可预览的完整 HTML */
-function buildHtml(code, lang) {
+// 按语言把代码组装成可预览的完整 HTML
+const buildHtml = (code, lang) => {
     if (lang === 'html' || lang === 'xml' || lang === 'svg') {
         return code;
     }
@@ -50,7 +50,7 @@ ${ERROR_GUARD}
 </html>`;
 }
 
-export default function CodeRunner({ runner, onClose }) {
+const CodeRunner = ({ runner, onClose }) => {
     const [tab, setTab] = useState('preview'); // preview | source
     const [code, setCode] = useState('');
     const lastLangRef = useRef('html');
@@ -67,7 +67,7 @@ export default function CodeRunner({ runner, onClose }) {
         }
     }, [runner]);
 
-    // 切到预览时直接从编辑器取当前内容，保证预览与源码一致
+    // 切到预览时直接从编辑器取当前内容, 保证预览与源码一致
     const showPreview = () => {
         if (editorApiRef.current) {
             setCode(editorApiRef.current.getValue());
@@ -75,7 +75,7 @@ export default function CodeRunner({ runner, onClose }) {
         setTab('preview');
     };
 
-    // 下载当前源码，取编辑器实时内容（与预览一致）
+    // 下载当前源码, 取编辑器实时内容 (与预览一致)
     const download = () => {
         const content = editorApiRef.current ? editorApiRef.current.getValue() : code;
         const ext = lang === 'javascript' ? 'js' : lang === 'typescript' ? 'ts' : lang;
@@ -136,7 +136,7 @@ export default function CodeRunner({ runner, onClose }) {
             <div className="min-h-0 flex-1">
                 {tab === 'preview' ? (
                     <div className="h-full">
-                        {/* key 绑定 html：源码一变，预览 iframe 强制重挂载，切换到预览即看到最新效果 */}
+                        {/* key 绑定 html: 源码一变, 预览 iframe 强制重挂载, 切换到预览即看到最新效果 */}
                         <iframe key={html} srcDoc={html} sandbox="allow-scripts" title="代码预览" className="h-full w-full border-0 bg-white" />
                     </div>
                 ) : (
@@ -147,4 +147,6 @@ export default function CodeRunner({ runner, onClose }) {
             </div>
         </aside>
     );
-}
+};
+
+export default CodeRunner;
