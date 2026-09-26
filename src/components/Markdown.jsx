@@ -17,8 +17,10 @@ const MONACO_LANG = {
     svg: 'html',
     css: 'css',
     js: 'javascript',
+    jsx: 'javascript',
     javascript: 'javascript',
     ts: 'typescript',
+    tsx: 'typescript',
     typescript: 'typescript',
     json: 'json'
 };
@@ -33,8 +35,10 @@ const DEFAULT_NAMES = {
     svg: 'index.svg',
     css: 'style.css',
     js: 'script.js',
+    jsx: 'script.jsx',
     javascript: 'script.js',
     ts: 'script.ts',
+    tsx: 'script.tsx',
     typescript: 'script.ts',
     json: 'data.json'
 };
@@ -83,7 +87,6 @@ const CodeBlock = ({ className, children, node, streaming, ...rest }) => {
             return;
         }
         return blocks.register({ lang, name: fileName, getText: () => codeRef.current });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const runnable = RUNNABLE_LANGS.includes(lang);

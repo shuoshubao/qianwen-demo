@@ -10,14 +10,28 @@ const LANG_MAP = {
     svg: 'html',
     css: 'css',
     js: 'javascript',
+    jsx: 'javascript',
     javascript: 'javascript',
     ts: 'typescript',
+    tsx: 'typescript',
     typescript: 'typescript',
     json: 'json'
 };
 
 // 单文件下载时的扩展名
-const EXT_MAP = { html: 'html', xml: 'html', svg: 'svg', css: 'css', js: 'js', javascript: 'js', ts: 'ts', typescript: 'ts', json: 'json' };
+const EXT_MAP = {
+    html: 'html',
+    xml: 'html',
+    svg: 'svg',
+    css: 'css',
+    js: 'js',
+    jsx: 'jsx',
+    javascript: 'js',
+    ts: 'ts',
+    tsx: 'tsx',
+    typescript: 'ts',
+    json: 'json'
+};
 
 // iframe 内注入错误捕获, 把 JS 报错显示在预览页顶部
 const ERROR_GUARD = `<script>

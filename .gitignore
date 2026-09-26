@@ -6,4 +6,7 @@ package-lock.json
 
 node_modules
 
+stats.json
+stats.html
+
 dist

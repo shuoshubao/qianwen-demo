@@ -1,6 +1,6 @@
 import { DatabaseOutlined } from '@ant-design/icons';
 import { Modal, Select, Typography } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import ChatInput from './components/ChatInput';
 import CodeRunner from './components/CodeRunner';
@@ -256,19 +256,23 @@ const App = () => {
         abortRef.current?.abort();
     };
 
-    const enterBulkMode = id => {
-        if (loading) {
-            return;
-        }
-        setBulkMode(true);
-        // 从哪条消息进入就默认选中哪条
-        setSelected(new Set([id]));
-    };
+    // useCallback: 稳定引用, 否则每次渲染新建函数会让 MessageItem 的 memo 失效
+    const enterBulkMode = useCallback(
+        id => {
+            if (loading) {
+                return;
+            }
+            setBulkMode(true);
+            // 从哪条消息进入就默认选中哪条
+            setSelected(new Set([id]));
+        },
+        [loading]
+    );
 
-    const exitBulkMode = () => {
+    const exitBulkMode = useCallback(() => {
         setBulkMode(false);
         setSelected(new Set());
-    };
+    }, []);
 
     // 批量模式下按 Esc 退出
     useEffect(() => {
@@ -286,7 +290,7 @@ const App = () => {
         };
     }, [bulkMode]);
 
-    const toggleSelect = id => {
+    const toggleSelect = useCallback(id => {
         setSelected(prev => {
             const next = new Set(prev);
             if (next.has(id)) {
@@ -296,7 +300,7 @@ const App = () => {
             }
             return next;
         });
-    };
+    }, []);
 
     const confirmDeleteSelected = () => {
         if (selected.size === 0) {
@@ -326,8 +330,18 @@ const App = () => {
     const empty = messages.length === 0;
     const activeTitle = sessions.find(item => item.id === activeId)?.title;
 
+    // 稳定引用: 否则 App 每次重渲染 (如流式每 token) 都会让所有 useRunner 消费者重渲染,
+    // 穿透 MessageItem 的 memo 导致历史消息里的 Monaco 代码块反复重渲染闪烁
+    const runnerCtx = useMemo(
+        () => ({
+            openRunner: files => setRunner({ files }),
+            openFile: file => setPreviewFile(file)
+        }),
+        []
+    );
+
     return (
-        <RunnerContext.Provider value={{ openRunner: files => setRunner({ files }), openFile: file => setPreviewFile(file) }}>
+        <RunnerContext.Provider value={runnerCtx}>
             <div className="flex h-screen bg-white">
                 <div className="flex-shrink-0 overflow-hidden transition-[width] duration-200" style={{ width: sidebarCollapsed ? 0 : 250 }}>
                     <SessionList
