@@ -23,6 +23,7 @@ const MONACO_LANG = {
     ts: 'typescript',
     tsx: 'typescript',
     typescript: 'typescript',
+    vue: 'html',
     json: 'json'
 };
 
@@ -41,6 +42,7 @@ const DEFAULT_NAMES = {
     ts: 'script.ts',
     tsx: 'script.tsx',
     typescript: 'script.ts',
+    vue: 'App.vue',
     json: 'data.json'
 };
 

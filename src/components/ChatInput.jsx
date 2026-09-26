@@ -8,7 +8,7 @@ import { formatSize, getFileMeta } from '../utils/fileMeta';
 const FILE_LIMIT = 512 * 1024;
 
 // 不支持图片的模型, 文件选择器只给文本/代码类 (accept 只是建议, pickFiles 里仍有防御性拦截)
-const TEXT_ACCEPT = 'text/*,application/json,application/xml,application/javascript,.ts,.tsx,.jsx,.sh';
+const TEXT_ACCEPT = 'application/javascript,.ts,.tsx,.jsx,.vue,text/*,application/json,application/xml,.sh';
 
 const ChatInput = ({ onSend, onStop, loading, allowImage, model, onModelChange }) => {
     const [text, setText] = useState('');

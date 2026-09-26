@@ -112,7 +112,7 @@ const StorageModal = ({ open, onClose, sessions, onDeleteMany }) => {
                             onConfirm={() => remove(selectedIds)}
                         >
                             <Button danger disabled={selectedIds.length === 0}>
-                                批量删除 ({selectedIds.length})
+                                批量删除{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
                             </Button>
                         </Popconfirm>
                         <Button onClick={onClose}>关闭</Button>

@@ -15,6 +15,7 @@ const LANG_MAP = {
     ts: 'typescript',
     tsx: 'typescript',
     typescript: 'typescript',
+    vue: 'html',
     json: 'json'
 };
 
@@ -30,6 +31,7 @@ const EXT_MAP = {
     ts: 'ts',
     tsx: 'tsx',
     typescript: 'ts',
+    vue: 'vue',
     json: 'json'
 };
 
