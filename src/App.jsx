@@ -1,7 +1,7 @@
 import { DatabaseOutlined } from '@ant-design/icons';
 import { Button, Modal, Space, Typography } from 'antd';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { find, orderBy, reject } from 'lodash';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MODELS, streamChat } from './api/ollama';
 import ChatInput from './components/ChatInput';
 import CodeRunner from './components/CodeRunner';
@@ -43,7 +43,7 @@ const App = () => {
     // 挂载前抓取 URL 中的会话 id 留快照 (同步 effect 会改写 URL)
     const initialSessionIdRef = useRef(new URL(window.location.href).searchParams.get('session'));
 
-    // 启动时优先恢复 URL 里记录的会话, 没有则加载最近一个
+    // 启动时按 URL 恢复会话, 无参数 (新对话页) 则停留空白页
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -52,7 +52,7 @@ const App = () => {
                 return;
             }
             setSessions(list);
-            const target = find(list, { id: initialSessionIdRef.current }) ?? list[0];
+            const target = find(list, { id: initialSessionIdRef.current });
             if (target) {
                 setActiveId(target.id);
                 if (target.model) {
@@ -120,12 +120,7 @@ const App = () => {
         if (loading) {
             return;
         }
-        const id = crypto.randomUUID();
-        const now = Date.now();
-        const session = { id, title: '', model, createdAt: now, updatedAt: now };
-        createSession(session);
-        setSessions(prev => [session, ...prev]);
-        setActiveId(id);
+        setActiveId(null);
         setMessages([]);
         stickToBottomRef.current = true;
     };
@@ -257,7 +252,13 @@ const App = () => {
             } catch {
                 /* ignore */
             }
-            setSessions(prev => orderBy(prev.map(item => (item.id === sid ? { ...item, updatedAt: Date.now() } : item)), item => item.updatedAt ?? 0, 'desc'));
+            setSessions(prev =>
+                orderBy(
+                    prev.map(item => (item.id === sid ? { ...item, updatedAt: Date.now() } : item)),
+                    item => item.updatedAt ?? 0,
+                    'desc'
+                )
+            );
             setLoading(false);
             abortRef.current = null;
         }
